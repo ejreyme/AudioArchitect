@@ -3,6 +3,7 @@ package com.joonyor.labs.audioarchitect
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.joonyor.labs.audioarchitect.AppConfiguration.APP_NAME
+import com.joonyor.labs.audioarchitect.player.YmeAudioPlayerService
 
 object AppConfiguration {
     const val APP_NAME = "Audio Architect"
@@ -14,10 +15,10 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = APP_NAME,
     ) {
-        MainScreen(
+        AudioArchitectApp(
             viewModel = LibraryViewModel(
                 audioPlayerService = YmeAudioPlayerService(),
-                libraryManager = YmeLibraryManager()
+                audioLibraryService = YmeAudioLibraryService()
             )
         )
     }

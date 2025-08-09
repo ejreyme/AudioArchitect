@@ -3,47 +3,17 @@ package com.joonyor.labs.audioarchitect
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
-import uk.co.caprica.vlcj.player.component.AudioPlayerComponent
 import java.io.File
 import kotlin.random.Random
 
-interface AudioPlayerService {
-    fun play(filePath: String)
-    fun stop()
-    fun pause()
-    fun volumeChange(value: Float)
-}
 
-class YmeAudioPlayerService : AudioPlayerService {
-    private var mediaPlayerComponent: AudioPlayerComponent = AudioPlayerComponent()
-
-    override fun play(filePath: String) {
-        print("play: $filePath")
-        mediaPlayerComponent.mediaPlayer()?.media()?.play(filePath)
-    }
-
-    override fun stop() {
-        print("stop")
-        mediaPlayerComponent.mediaPlayer()?.controls()?.stop()
-    }
-
-    override fun pause() {
-        print("pause")
-        mediaPlayerComponent.mediaPlayer()?.controls()?.pause()
-    }
-
-    override fun volumeChange(value: Float) {
-        mediaPlayerComponent.mediaPlayer().audio().setVolume(value.toInt())
-    }
-}
-
-interface LibraryManager {
-    fun loadLibrary(): List<YmeTrack>
+interface AudioLibraryService {
+    fun loadTracks(): List<YmeTrack>
     fun loadPlaylists(): List<YmePlaylist>
 }
 
-class YmeLibraryManager : LibraryManager {
-    override fun loadLibrary(): List<YmeTrack> {
+class YmeAudioLibraryService : AudioLibraryService {
+    override fun loadTracks(): List<YmeTrack> {
         val tracks: MutableList<YmeTrack> = mutableListOf()
         try {
             File(AppConfiguration.LIBRARY_ROOT_PATH).walkTopDown()
@@ -68,11 +38,18 @@ class YmeLibraryManager : LibraryManager {
                 filePath = file.absolutePath,
                 title = tag.getFirst(FieldKey.TITLE),
                 artist = tag.getFirst(FieldKey.ARTIST),
+                duration = toDuration(audioFile.audioHeader.trackLength)
             )
         } catch (e: Exception) {
             e.printStackTrace()
         }
         return YmeTrack(filePath = file.absolutePath)
+    }
+
+    private fun toDuration(duration: Int): String {
+        val minutes = duration / 60
+        val seconds = duration % 60
+        return String.format("%02d:%02d", minutes, seconds)
     }
 }
 
@@ -80,6 +57,7 @@ data class YmeTrack(
     val filePath: String = "",
     val title: String = "Unknown title",
     val artist: String = "Unknown artist",
+    val duration: String = "00:00"
 )
 
 data class YmePlaylist(
@@ -87,3 +65,12 @@ data class YmePlaylist(
     val name: String = "New playlist-" + Random.nextInt(1000),
     val items: List<YmeTrack> = emptyList()
 )
+
+data class PlaylistEvent(
+    val playlist: YmePlaylist = YmePlaylist(),
+    val type: PlaylistEventType = PlaylistEventType.DEFAULT,
+)
+
+enum class PlaylistEventType {
+    EXPORT, CREATE, DELETE, DEFAULT
+}
