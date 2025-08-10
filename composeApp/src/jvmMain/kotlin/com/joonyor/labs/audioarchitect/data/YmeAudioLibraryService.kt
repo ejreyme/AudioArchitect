@@ -1,21 +1,14 @@
-package com.joonyor.labs.audioarchitect
+package com.joonyor.labs.audioarchitect.data
 
+import com.joonyor.labs.audioarchitect.home.AppConfiguration
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flow
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import java.io.File
 import kotlin.random.Random
-
-
-interface AudioLibraryService {
-    val latestPlaylistCollection: Flow<List<YmePlaylist>>
-    val latestTrackCollection: Flow<List<YmeTrack>>
-    fun addPlaylist(playlist: YmePlaylist)
-}
 
 class YmeAudioLibraryService() : AudioLibraryService {
     private var playlistDataRepository: MutableList<YmePlaylist> = mutableListOf()

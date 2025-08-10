@@ -1,4 +1,4 @@
-package com.joonyor.labs.audioarchitect
+package com.joonyor.labs.audioarchitect.home
 
 object AppConfiguration {
     const val APP_NAME = "Audio Architect"

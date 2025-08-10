@@ -2,14 +2,8 @@ package com.joonyor.labs.audioarchitect.player
 
 import uk.co.caprica.vlcj.player.component.AudioPlayerComponent
 
-interface AudioPlayerService {
-    fun play(filePath: String)
-    fun stop()
-    fun pause()
-    fun volumeChange(value: Float)
-}
 
-class YmeAudioPlayerService : AudioPlayerService {
+class VlcAudioPlayerService : AudioPlayerService {
     private var mediaPlayerComponent: AudioPlayerComponent = AudioPlayerComponent()
 
     init {

@@ -15,8 +15,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.joonyor.labs.audioarchitect.YmePlaylist
-import com.joonyor.labs.audioarchitect.YmeTrack
+import com.joonyor.labs.audioarchitect.data.YmePlaylist
+import com.joonyor.labs.audioarchitect.data.YmeTrack
 
 @Composable
 fun YmeAudioPlayer(

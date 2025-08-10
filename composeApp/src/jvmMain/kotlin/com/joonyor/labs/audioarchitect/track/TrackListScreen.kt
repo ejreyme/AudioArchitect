@@ -17,7 +17,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.joonyor.labs.audioarchitect.YmeTrack
+import com.joonyor.labs.audioarchitect.data.YmeTrack
 import com.joonyor.labs.audioarchitect.player.AudioPlayerEvent
 import com.joonyor.labs.audioarchitect.player.AudioPlayerEventType
 

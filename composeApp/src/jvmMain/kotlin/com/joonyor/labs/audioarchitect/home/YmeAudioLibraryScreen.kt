@@ -1,26 +1,19 @@
-package com.joonyor.labs.audioarchitect
+package com.joonyor.labs.audioarchitect.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.joonyor.labs.audioarchitect.player.AudioPlayerService
-import com.joonyor.labs.audioarchitect.player.AudioPlayerEvent
-import com.joonyor.labs.audioarchitect.player.AudioPlayerEventType
 import com.joonyor.labs.audioarchitect.player.YmeAudioPlayer
 import com.joonyor.labs.audioarchitect.playlist.PlaylistScreen
 import com.joonyor.labs.audioarchitect.track.TrackDetailScreen
 import com.joonyor.labs.audioarchitect.track.TrackListScreen
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Composable
 fun AudioLibraryScreen(viewModel: AudioLibraryViewModel) {
