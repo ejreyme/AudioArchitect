@@ -1,5 +1,9 @@
 package com.joonyor.labs.audioarchitect
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flow
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -8,26 +12,50 @@ import kotlin.random.Random
 
 
 interface AudioLibraryService {
-    fun loadTracks(): List<YmeTrack>
-    fun loadPlaylists(): List<YmePlaylist>
+    val latestPlaylistCollection: Flow<List<YmePlaylist>>
+    val latestTrackCollection: Flow<List<YmeTrack>>
+    fun addPlaylist(playlist: YmePlaylist)
 }
 
-class YmeAudioLibraryService : AudioLibraryService {
-    override fun loadTracks(): List<YmeTrack> {
-        val tracks: MutableList<YmeTrack> = mutableListOf()
+class YmeAudioLibraryService() : AudioLibraryService {
+    private var playlistDataRepository: MutableList<YmePlaylist> = mutableListOf()
+    private var trackDataRepository: MutableList<YmeTrack> = mutableListOf()
+
+    // Use MutableStateFlow for reactive updates
+    private val _playlistCollection = MutableStateFlow<List<YmePlaylist>>(emptyList())
+    override val latestPlaylistCollection: Flow<List<YmePlaylist>> = _playlistCollection.asStateFlow()
+
+    private val _trackCollection = MutableStateFlow<List<YmeTrack>>(emptyList())
+    override val latestTrackCollection: Flow<List<YmeTrack>> = _trackCollection.asStateFlow()
+
+    init {
+        loadTracks()
+        loadPlaylists()
+        // Emit initial data
+        _playlistCollection.value = playlistDataRepository.toList()
+        _trackCollection.value = trackDataRepository.toList()
+    }
+
+    override fun addPlaylist(playlist: YmePlaylist) {
+        println("addPlaylist")
+        playlistDataRepository.add(playlist)
+        // Emit updated list to trigger UI recomposition
+        _playlistCollection.value = playlistDataRepository.toList()
+    }
+
+    private fun loadTracks() {
         try {
             File(AppConfiguration.LIBRARY_ROOT_PATH).walkTopDown()
                 .filter { it.isFile }
                 .filter { it.extension == "wav" || it.extension == "mp3" || it.extension == "m4a" }
-                .forEach { tracks.add(toTrack(it)) }
+                .forEach { trackDataRepository.add(toTrack(it)) }
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return tracks
     }
 
-    override fun loadPlaylists(): List<YmePlaylist> {
-        return emptyList()
+    private fun loadPlaylists(): List<YmePlaylist> {
+        return playlistDataRepository
     }
 
     private fun toTrack(file: File): YmeTrack {
@@ -63,7 +91,7 @@ data class YmeTrack(
 data class YmePlaylist(
     var id: Int = 0,
     val name: String = "New playlist-" + Random.nextInt(1000),
-    val items: List<YmeTrack> = emptyList()
+    val tracks: List<YmeTrack> = emptyList()
 )
 
 data class PlaylistEvent(

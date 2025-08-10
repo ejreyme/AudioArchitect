@@ -20,8 +20,9 @@ import com.joonyor.labs.audioarchitect.player.AudioPlayerEventType
 @Composable
 fun TrackListScreen(
     modifier: Modifier = Modifier,
-    tracks: List<YmeTrack> = emptyList(),
+    trackCollection: List<YmeTrack> = emptyList(),
     selectedTrack: MutableState<YmeTrack>,
+    currentTrackPlaying: YmeTrack,
     onMediaPlayerEvent: (AudioPlayerEvent) -> Unit,
     isPlaying: Boolean = false,
 ) {
@@ -30,28 +31,28 @@ fun TrackListScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         LazyColumn {
-            items(tracks.size) { track ->
+            items(trackCollection.size) { track ->
                 Row(
                     modifier = Modifier.fillParentMaxWidth()
                         .combinedClickable(
                             onClick = {
-                                selectedTrack.value = tracks[track]
+                                selectedTrack.value = trackCollection[track]
                             },
-                            onDoubleClick = {
-                                selectedTrack.value = tracks[track]
-                                onMediaPlayerEvent.invoke(
-                                    AudioPlayerEvent(
-                                        track = selectedTrack.value,
-                                        type = if (isPlaying) AudioPlayerEventType.PAUSE else AudioPlayerEventType.PLAY
-                                    )
-                                )
-                            }
+//                            onDoubleClick = {
+//                                selectedTrack.value = trackCollection[track]
+//                                onMediaPlayerEvent.invoke(
+//                                    AudioPlayerEvent(
+//                                        track = selectedTrack.value,
+//                                        type = if (isPlaying) AudioPlayerEventType.PAUSE else AudioPlayerEventType.PLAY
+//                                    )
+//                                )
+//                            }
                         )
                 ) {
                     Column(modifier = Modifier.weight(0.2f)) {
                         Button(
                             onClick = {
-                                selectedTrack.value = tracks[track]
+                                selectedTrack.value = trackCollection[track]
                                 onMediaPlayerEvent.invoke(
                                     AudioPlayerEvent(
                                         track = selectedTrack.value,
@@ -61,20 +62,20 @@ fun TrackListScreen(
                             }
                         ) {
                             Text(
-                                text = if (isPlaying && selectedTrack.value == tracks[track]) "Pause" else "Play"
+                                text = if (isPlaying && currentTrackPlaying == trackCollection[track]) "Pause" else "Play"
                             )
                         }
                     }
                     Column(modifier = Modifier.weight(0.6f)) {
                         Row {
-                            Text(tracks[track].title)
+                            Text(trackCollection[track].title)
                         }
                         Row {
-                            Text(tracks[track].artist)
+                            Text(trackCollection[track].artist)
                         }
                     }
                     Column(modifier = Modifier.weight(0.2f)) {
-                        Text(tracks[track].duration)
+                        Text(trackCollection[track].duration)
                     }
                 }
                 Divider()

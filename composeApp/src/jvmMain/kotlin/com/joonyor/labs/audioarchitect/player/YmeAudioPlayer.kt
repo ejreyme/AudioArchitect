@@ -21,7 +21,7 @@ import com.joonyor.labs.audioarchitect.YmeTrack
 @Composable
 fun YmeAudioPlayer(
     selectedTrack: YmeTrack = YmeTrack(),
-    currentTrackPlaying: YmeTrack? = null,
+    currentTrackPlaying: YmeTrack = YmeTrack(),
     isPlaying: Boolean = false,
     onAudioPlayerEvent: (AudioPlayerEvent) -> Unit,
 ) {
