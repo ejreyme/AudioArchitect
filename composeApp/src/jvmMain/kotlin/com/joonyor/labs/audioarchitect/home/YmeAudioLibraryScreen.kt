@@ -41,6 +41,7 @@ fun AudioLibraryScreen(viewModel: AudioLibraryViewModel) {
                         selectedTrack = selectedTrack.value,
                         currentTrackPlaying = currentTrackPlaying.value,
                         isPlaying = isPlaying.value,
+                        trackPosition = viewModel.trackPosition,
                         onAudioPlayerEvent = { viewModel.onAudioPlayerEvent(it) },
                     )
                 }

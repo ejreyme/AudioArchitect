@@ -14,7 +14,7 @@ fun main() = application {
     val audioLibraryService = YmeAudioLibraryService()
 
     Window(
-        onCloseRequest = { onExit(this) },
+        onCloseRequest = { onExit(this, audioPlayerService) },
         title = APP_NAME,
     ) {
         AudioLibraryScreen(
@@ -26,7 +26,8 @@ fun main() = application {
     }
 }
 
-fun onExit(applicationScope: ApplicationScope) {
-    println("Exit")
+fun onExit(applicationScope: ApplicationScope, audioPlayerService: VlcAudioPlayerService) {
+    println("Exiting")
+    audioPlayerService.exit()
     applicationScope.exitApplication()
 }

@@ -10,6 +10,7 @@ import androidx.compose.material.Slider
 import androidx.compose.material.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,32 +25,34 @@ fun YmeAudioPlayerScreen(
     currentTrackPlaying: YmeTrack = YmeTrack(),
     isPlaying: Boolean = false,
     onAudioPlayerEvent: (AudioPlayerEvent) -> Unit,
+    trackPosition: MutableState<Float>,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Row {
-            var trackPosition by remember { mutableStateOf(0.5f) }
-            Slider(
-                value = trackPosition,
-                onValueChange = {
-                    trackPosition = it
-                    onAudioPlayerEvent.invoke(
-                        AudioPlayerEvent(
-                            type = AudioPlayerEventType.TRACK_CHANGED,
-                            trackPosition = 1 //todo implement track position from audio player events
+        if (isPlaying) {
+            Row(modifier = Modifier.weight(0.2f)) {
+                Slider(
+                    value = trackPosition.value,
+                    onValueChange = {
+                        trackPosition.value = it
+                        onAudioPlayerEvent.invoke(
+                            AudioPlayerEvent(
+                                type = AudioPlayerEventType.TRACK_POSITION,
+                                trackPosition = it
+                            )
                         )
+                    },
+                    steps = 4,
+                    valueRange = 0.0f..1.0f,
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colors.primaryVariant,
+                        activeTrackColor = MaterialTheme.colors.primaryVariant
                     )
-                },
-                steps = 4,
-                valueRange = 0.0f..1.0f,
-                colors = SliderDefaults.colors(
-                    thumbColor = MaterialTheme.colors.primaryVariant,
-                    activeTrackColor = MaterialTheme.colors.primaryVariant
                 )
-            )
+            }
         }
-        Row {
+        Row(modifier = Modifier.weight(0.8f)) {
             Column(modifier = Modifier.weight(0.3f)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -112,12 +115,12 @@ fun AudioPlayerControls(
             onClick = {
                 onAudioPlayerEvent.invoke(
                     AudioPlayerEvent(
-                        type = AudioPlayerEventType.SKIP_BACK
+                        type = AudioPlayerEventType.STOP
                     )
                 )
             }
         ) {
-            Text("Back")
+            Text("STOP")
         }
         IconButton(onClick = {
             if (isPlaying) {
@@ -137,14 +140,17 @@ fun AudioPlayerControls(
         }) {
             if (isPlaying) Text("Pause") else Text("Play")
         }
+        var repeat by remember { mutableStateOf(false) }
         IconButton(onClick = {
+            repeat = !repeat
             onAudioPlayerEvent.invoke(
                 AudioPlayerEvent(
-                    type = AudioPlayerEventType.SKIP_FORWARD
+                    type = AudioPlayerEventType.REPEAT,
+                    isRepeat = repeat
                 )
             )
         }) {
-            Text("Forward")
+            if (repeat) Text("NO REPEAT") else Text("REPEAT")
         }
     }
 }
@@ -154,9 +160,10 @@ data class AudioPlayerEvent(
     val track: YmeTrack = YmeTrack(),
     val type: AudioPlayerEventType = AudioPlayerEventType.STOP,
     val volume: Float = 0.0f,
-    val trackPosition: Long = 0L,
+    val trackPosition: Float = 0.0f,
+    val isRepeat: Boolean = false,
 )
 
 enum class AudioPlayerEventType {
-    PLAY, PAUSE, SKIP_FORWARD, SKIP_BACK, STOP, QUEUE, VOLUME, TRACK_CHANGED,
+    PLAY, PAUSE, SKIP_FORWARD, SKIP_BACK, STOP, QUEUE, VOLUME, TRACK_POSITION, REPEAT,
 }

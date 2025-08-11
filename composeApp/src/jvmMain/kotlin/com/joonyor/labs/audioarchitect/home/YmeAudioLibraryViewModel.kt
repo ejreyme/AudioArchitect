@@ -18,15 +18,22 @@ class AudioLibraryViewModel(
     private val audioPlayerService: AudioPlayerService,
     private val audioLibraryService: AudioLibraryService
 ) {
-    var scope = CoroutineScope(Dispatchers.IO)
+    val scope = CoroutineScope(Dispatchers.IO)
     var isPlaying: MutableState<Boolean> = mutableStateOf(false)
     var currentTrackPlaying: MutableState<YmeTrack> = mutableStateOf(YmeTrack())
     var selectedTrack: MutableState<YmeTrack> = mutableStateOf(YmeTrack())
     var trackCollection: MutableState<List<YmeTrack>> = mutableStateOf(emptyList())
     var playlistCollection: MutableState<List<YmePlaylist>> = mutableStateOf(emptyList())
+    var trackPosition: MutableState<Float> = mutableStateOf(0.0f)
 
     init {
         refresh()
+        scope.launch {
+            audioPlayerService.trackPosition.collect {
+                println("collecting trackPosition: $it")
+                trackPosition.value = it
+            }
+        }
     }
 
     fun onPlaylistEvent(event: PlaylistEvent) {
@@ -62,10 +69,24 @@ class AudioLibraryViewModel(
             AudioPlayerEventType.VOLUME -> {
                 onVolumeChange(event.volume)
             }
+            AudioPlayerEventType.TRACK_POSITION -> {
+                onTrackPositionChange(event.trackPosition)
+            }
+            AudioPlayerEventType.REPEAT -> {
+                onRepeatClick(event.isRepeat)
+            }
             else -> {
                 onStopClick()
             }
         }
+    }
+
+    private fun onRepeatClick(isRepeat: Boolean) {
+        audioPlayerService.repeat(isRepeat)
+    }
+
+    private fun onTrackPositionChange(position: Float) {
+        audioPlayerService.trackPositionChange(position)
     }
 
     private fun refresh() {
