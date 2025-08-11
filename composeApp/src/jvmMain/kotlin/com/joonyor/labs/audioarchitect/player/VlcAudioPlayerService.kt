@@ -57,8 +57,7 @@ class VlcAudioPlayerService() : AudioPlayerService {
 
     override fun trackPositionChange(position: Float) {
         println("trackPositionChange: $position")
-        TODO("Add position control in future")
-//        vlcAudioPlayer.mediaPlayer().controls().setPosition(position)
+        vlcAudioPlayer.mediaPlayer().controls().setPosition(position)
     }
 
     override fun exit() {

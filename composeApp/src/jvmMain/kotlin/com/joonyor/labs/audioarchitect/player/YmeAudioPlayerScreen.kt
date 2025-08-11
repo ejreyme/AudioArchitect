@@ -4,10 +4,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Slider
 import androidx.compose.material.SliderDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.RepeatOn
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -30,27 +37,25 @@ fun YmeAudioPlayerScreen(
     Column(
         modifier = Modifier.fillMaxWidth(),
     ) {
-        if (isPlaying) {
-            Row(modifier = Modifier.weight(0.2f)) {
-                Slider(
-                    value = trackPosition.value,
-                    onValueChange = {
-                        trackPosition.value = it
-                        onAudioPlayerEvent.invoke(
-                            AudioPlayerEvent(
-                                type = AudioPlayerEventType.TRACK_POSITION,
-                                trackPosition = it
-                            )
+        Row(modifier = Modifier.weight(0.2f)) {
+            Slider(
+                enabled = !currentTrackPlaying.isNew && isPlaying,
+                value = trackPosition.value,
+                onValueChange = {
+                    trackPosition.value = it
+                    onAudioPlayerEvent.invoke(
+                        AudioPlayerEvent(
+                            type = AudioPlayerEventType.TRACK_POSITION,
+                            trackPosition = it
                         )
-                    },
-                    steps = 4,
-                    valueRange = 0.0f..1.0f,
-                    colors = SliderDefaults.colors(
-                        thumbColor = MaterialTheme.colors.primaryVariant,
-                        activeTrackColor = MaterialTheme.colors.primaryVariant
                     )
+                },
+                valueRange = 0.0f..1.0f,
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colors.primaryVariant,
+                    activeTrackColor = MaterialTheme.colors.primaryVariant
                 )
-            }
+            )
         }
         Row(modifier = Modifier.weight(0.8f)) {
             Column(modifier = Modifier.weight(0.3f)) {
@@ -90,7 +95,6 @@ fun YmeAudioPlayerScreen(
                                 )
                             )
                         },
-                        steps = 4,
                         valueRange = 0.0f..1.0f,
                         colors = SliderDefaults.colors(
                             thumbColor = MaterialTheme.colors.primaryVariant,
@@ -120,7 +124,10 @@ fun AudioPlayerControls(
                 )
             }
         ) {
-            Text("STOP")
+            Icon(
+                imageVector = Icons.Filled.Stop,
+                contentDescription = "Stop",
+            )
         }
         IconButton(onClick = {
             if (isPlaying) {
@@ -138,7 +145,11 @@ fun AudioPlayerControls(
                 )
             }
         }) {
-            if (isPlaying) Text("Pause") else Text("Play")
+            Icon(
+                imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                contentDescription = if (isPlaying) "Pause" else "Play",
+            )
+
         }
         var repeat by remember { mutableStateOf(false) }
         IconButton(onClick = {
@@ -150,7 +161,10 @@ fun AudioPlayerControls(
                 )
             )
         }) {
-            if (repeat) Text("NO REPEAT") else Text("REPEAT")
+            Icon(
+                imageVector = if (repeat) Icons.Filled.RepeatOn else Icons.Filled.Repeat,
+                contentDescription = if (repeat) "Repeat On" else "Repeat",
+            )
         }
     }
 }

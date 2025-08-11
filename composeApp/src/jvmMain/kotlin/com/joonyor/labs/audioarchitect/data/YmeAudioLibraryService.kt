@@ -79,7 +79,9 @@ data class YmeTrack(
     val title: String = "Unknown title",
     val artist: String = "Unknown artist",
     val duration: String = "00:00"
-)
+) {
+    val isNew = filePath.isEmpty()
+}
 
 data class YmePlaylist(
     var id: Int = 0,
