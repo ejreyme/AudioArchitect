@@ -19,7 +19,7 @@ import com.joonyor.labs.audioarchitect.data.YmePlaylist
 import com.joonyor.labs.audioarchitect.data.YmeTrack
 
 @Composable
-fun YmeAudioPlayer(
+fun YmeAudioPlayerScreen(
     selectedTrack: YmeTrack = YmeTrack(),
     currentTrackPlaying: YmeTrack = YmeTrack(),
     isPlaying: Boolean = false,
@@ -28,6 +28,27 @@ fun YmeAudioPlayer(
     Column(
         modifier = Modifier.fillMaxWidth(),
     ) {
+        Row {
+            var trackPosition by remember { mutableStateOf(0.5f) }
+            Slider(
+                value = trackPosition,
+                onValueChange = {
+                    trackPosition = it
+                    onAudioPlayerEvent.invoke(
+                        AudioPlayerEvent(
+                            type = AudioPlayerEventType.TRACK_CHANGED,
+                            trackPosition = 1 //todo implement track position from audio player events
+                        )
+                    )
+                },
+                steps = 4,
+                valueRange = 0.0f..1.0f,
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colors.primaryVariant,
+                    activeTrackColor = MaterialTheme.colors.primaryVariant
+                )
+            )
+        }
         Row {
             Column(modifier = Modifier.weight(0.3f)) {
                 Row(
@@ -47,8 +68,8 @@ fun YmeAudioPlayer(
                     horizontalArrangement = Arrangement.Start
                 ) {
                     Column {
-                        Text(text = currentTrackPlaying?.title ?: "No title")
-                        Text(text = currentTrackPlaying?.artist ?: "No artist")
+                        Text(text = currentTrackPlaying.title)
+                        Text(text = currentTrackPlaying.artist)
                     }
                 }
             }
@@ -133,8 +154,9 @@ data class AudioPlayerEvent(
     val track: YmeTrack = YmeTrack(),
     val type: AudioPlayerEventType = AudioPlayerEventType.STOP,
     val volume: Float = 0.0f,
+    val trackPosition: Long = 0L,
 )
 
 enum class AudioPlayerEventType {
-    PLAY, PAUSE, SKIP_FORWARD, SKIP_BACK, STOP, QUEUE, VOLUME
+    PLAY, PAUSE, SKIP_FORWARD, SKIP_BACK, STOP, QUEUE, VOLUME, TRACK_CHANGED,
 }

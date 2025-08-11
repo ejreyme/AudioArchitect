@@ -1,14 +1,30 @@
 package com.joonyor.labs.audioarchitect.player
 
+import uk.co.caprica.vlcj.player.base.MediaPlayer
+import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter
 import uk.co.caprica.vlcj.player.component.AudioPlayerComponent
+import java.lang.System.exit
+import kotlin.system.exitProcess
+
 
 // https://www.capricasoftware.co.uk
 class VlcAudioPlayerService : AudioPlayerService {
-    private var vlcAudioPlayer: AudioPlayerComponent = AudioPlayerComponent()
-
+    private val vlcAudioPlayer = AudioPlayerComponent()
     init {
+        vlcAudioPlayer.mediaPlayer().events().addMediaPlayerEventListener(object : MediaPlayerEventAdapter() {
+            override fun positionChanged(mediaPlayer: MediaPlayer?, newPosition: Float) {
+                super.positionChanged(mediaPlayer, newPosition)
+                println("positionChanged: $newPosition")
+            }
+            override fun finished(mediaPlayer: MediaPlayer?) {
+                exitProcess(0)
+            }
+
+            override fun error(mediaPlayer: MediaPlayer?) {
+                exitProcess(1)
+            }
+        })
         vlcAudioPlayer.mediaPlayer().audio().setVolume(50)
-//        vlcAudioPlayer.timeChanged()
     }
 
     override fun play(filePath: String) {
@@ -35,5 +51,16 @@ class VlcAudioPlayerService : AudioPlayerService {
         }
     }
 
+    fun exit() {
+        vlcAudioPlayer.mediaPlayer().submit {
+            vlcAudioPlayer.mediaPlayer().release()
+            exitProcess(0)
+        }
+    }
+
     // TODO events listener VLC MediaPlayerEventListener
+}
+
+class MyEventHandler : MediaPlayerEventAdapter() {
+
 }

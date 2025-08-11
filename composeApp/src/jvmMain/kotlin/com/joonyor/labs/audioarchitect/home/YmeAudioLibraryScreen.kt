@@ -10,7 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.joonyor.labs.audioarchitect.player.YmeAudioPlayer
+import com.joonyor.labs.audioarchitect.player.YmeAudioPlayerScreen
 import com.joonyor.labs.audioarchitect.playlist.PlaylistScreen
 import com.joonyor.labs.audioarchitect.track.TrackDetailScreen
 import com.joonyor.labs.audioarchitect.track.TrackListScreen
@@ -37,7 +37,7 @@ fun AudioLibraryScreen(viewModel: AudioLibraryViewModel) {
             },
             bottomBar = {
                 BottomAppBar {
-                    YmeAudioPlayer(
+                    YmeAudioPlayerScreen(
                         selectedTrack = selectedTrack.value,
                         currentTrackPlaying = currentTrackPlaying.value,
                         isPlaying = isPlaying.value,
