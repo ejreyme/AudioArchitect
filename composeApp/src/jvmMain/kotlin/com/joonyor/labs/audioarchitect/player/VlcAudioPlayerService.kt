@@ -2,35 +2,38 @@ package com.joonyor.labs.audioarchitect.player
 
 import uk.co.caprica.vlcj.player.component.AudioPlayerComponent
 
-
+// https://www.capricasoftware.co.uk
 class VlcAudioPlayerService : AudioPlayerService {
-    private var mediaPlayerComponent: AudioPlayerComponent = AudioPlayerComponent()
+    private var vlcAudioPlayer: AudioPlayerComponent = AudioPlayerComponent()
 
     init {
-        mediaPlayerComponent.mediaPlayer().audio().setVolume(50)
+        vlcAudioPlayer.mediaPlayer().audio().setVolume(50)
+//        vlcAudioPlayer.timeChanged()
     }
 
     override fun play(filePath: String) {
         print("play: $filePath")
-        mediaPlayerComponent.mediaPlayer()?.media()?.play(filePath)
+        vlcAudioPlayer.mediaPlayer()?.media()?.play(filePath)
     }
 
     override fun stop() {
         print("stop")
-        mediaPlayerComponent.mediaPlayer()?.controls()?.stop()
+        vlcAudioPlayer.mediaPlayer()?.controls()?.stop()
     }
 
     override fun pause() {
         print("pause")
-        mediaPlayerComponent.mediaPlayer()?.controls()?.pause()
+        vlcAudioPlayer.mediaPlayer()?.controls()?.pause()
     }
 
     override fun volumeChange(value: Float) {
         val volume = (value * 100).toInt()
         try {
-            mediaPlayerComponent.mediaPlayer().audio().setVolume(volume)
+            vlcAudioPlayer.mediaPlayer().audio().setVolume(volume)
         } catch (e: Exception) {
-            mediaPlayerComponent.mediaPlayer().audio().setVolume(50)
+            vlcAudioPlayer.mediaPlayer().audio().setVolume(50)
         }
     }
+
+    // TODO events listener VLC MediaPlayerEventListener
 }
