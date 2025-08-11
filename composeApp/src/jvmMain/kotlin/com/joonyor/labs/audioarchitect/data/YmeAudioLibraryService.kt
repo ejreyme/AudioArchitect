@@ -1,9 +1,12 @@
 package com.joonyor.labs.audioarchitect.data
 
 import com.joonyor.labs.audioarchitect.home.AppConfiguration
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -11,29 +14,54 @@ import java.io.File
 import kotlin.random.Random
 
 class YmeAudioLibraryService() : AudioLibraryService {
-    private var playlistDataRepository: MutableList<YmePlaylist> = mutableListOf()
+    val scope = CoroutineScope(Dispatchers.IO)
+
+    private var playlistDataRepository: PlaylistDataRepository = PlaylistDataRepository()
     private var trackDataRepository: MutableList<YmeTrack> = mutableListOf()
 
-    // Use MutableStateFlow for reactive updates
+    // Use MutableStateFlow for reactive updates (local)
     private val _playlistCollection = MutableStateFlow<List<YmePlaylist>>(emptyList())
-    override val latestPlaylistCollection: Flow<List<YmePlaylist>> = _playlistCollection.asStateFlow()
-
     private val _trackCollection = MutableStateFlow<List<YmeTrack>>(emptyList())
+
+    // Use asStateFlow to get a read-only snapshot (immutable)
+    override val latestPlaylistCollection: Flow<List<YmePlaylist>> = _playlistCollection.asStateFlow()
     override val latestTrackCollection: Flow<List<YmeTrack>> = _trackCollection.asStateFlow()
 
     init {
         loadTracks()
-        loadPlaylists()
+
         // Emit initial data
-        _playlistCollection.value = playlistDataRepository.toList()
-        _trackCollection.value = trackDataRepository.toList()
+        triggerPlaylistCollectionUpdate()
+        triggerTrackCollectionUpdate()
     }
 
     override fun addPlaylist(playlist: YmePlaylist) {
         println("addPlaylist")
-        playlistDataRepository.add(playlist)
-        // Emit updated list to trigger UI recomposition
-        _playlistCollection.value = playlistDataRepository.toList()
+        playlistDataRepository.addPlaylist(playlist)
+        triggerPlaylistCollectionUpdate()
+    }
+
+    override fun updatePlaylist(
+        playlist: YmePlaylist,
+        track: YmeTrack
+    ) {
+        println("updatePlaylist")
+        playlistDataRepository.updatePlaylist(playlist, track)
+    }
+
+    // Emit updated list to trigger UI recomposition
+    private fun triggerPlaylistCollectionUpdate() {
+        scope.launch {
+            playlistDataRepository.latestPlaylistCollection.collect {
+                println("triggerPlaylistCollectionUpdate: $it")
+                _playlistCollection.value = it
+            }
+        }
+    }
+
+    // Emit updated list to trigger UI recomposition
+    private fun triggerTrackCollectionUpdate() {
+        _trackCollection.value = trackDataRepository.toList()
     }
 
     private fun loadTracks() {
@@ -45,10 +73,6 @@ class YmeAudioLibraryService() : AudioLibraryService {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    private fun loadPlaylists(): List<YmePlaylist> {
-        return playlistDataRepository
     }
 
     private fun toTrack(file: File): YmeTrack {
@@ -91,9 +115,10 @@ data class YmePlaylist(
 
 data class PlaylistEvent(
     val playlist: YmePlaylist = YmePlaylist(),
+    val track: YmeTrack = YmeTrack(),
     val type: PlaylistEventType = PlaylistEventType.DEFAULT,
 )
 
 enum class PlaylistEventType {
-    EXPORT, CREATE, DELETE, DEFAULT
+    EXPORT, CREATE, DELETE, DEFAULT, ADD_TRACK, REMOVE_TRACK
 }

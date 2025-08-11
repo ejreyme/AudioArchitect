@@ -172,12 +172,12 @@ fun AudioPlayerControls(
 data class AudioPlayerEvent(
     val playlist: YmePlaylist = YmePlaylist(),
     val track: YmeTrack = YmeTrack(),
-    val type: AudioPlayerEventType = AudioPlayerEventType.STOP,
+    val type: AudioPlayerEventType = AudioPlayerEventType.DEFAULT,
     val volume: Float = 0.0f,
     val trackPosition: Float = 0.0f,
     val isRepeat: Boolean = false,
 )
 
 enum class AudioPlayerEventType {
-    PLAY, PAUSE, SKIP_FORWARD, SKIP_BACK, STOP, QUEUE, VOLUME, TRACK_POSITION, REPEAT,
+    PLAY, PAUSE, SKIP_FORWARD, SKIP_BACK, STOP, QUEUE, VOLUME, TRACK_POSITION, REPEAT, DEFAULT, ADD_TO_PLAYLIST, REMOVE_FROM_PLAYLIST
 }

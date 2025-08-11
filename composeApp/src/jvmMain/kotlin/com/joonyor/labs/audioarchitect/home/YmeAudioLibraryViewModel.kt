@@ -39,13 +39,16 @@ class AudioLibraryViewModel(
     fun onPlaylistEvent(event: PlaylistEvent) {
         when (event.type) {
             PlaylistEventType.CREATE -> {
-                scope.launch {
-                    println("Create playlist: ${event.playlist.name}")
-                    audioLibraryService.addPlaylist(event.playlist)
-                    refreshPlaylists()
-                }
+                println("Create playlist: ${event.playlist.name}")
+                audioLibraryService.addPlaylist(event.playlist)
             }
-            else -> {}
+            PlaylistEventType.ADD_TRACK -> {
+                println("Add track to playlist: ${event.playlist.name}")
+                audioLibraryService.updatePlaylist(event.playlist, event.track)
+            }
+            else -> {
+                println("Unknown playlist event")
+            }
         }
     }
 
@@ -76,7 +79,7 @@ class AudioLibraryViewModel(
                 onRepeatClick(event.isRepeat)
             }
             else -> {
-                onStopClick()
+                println("Unknown audio player event")
             }
         }
     }
@@ -90,26 +93,26 @@ class AudioLibraryViewModel(
     }
 
     private fun refresh() {
-        refreshPlaylists()
-        refreshTracks()
-    }
-
-    private fun refreshPlaylists() {
-        println("refreshPlaylists")
         scope.launch {
-            audioLibraryService.latestPlaylistCollection.collect {
-                println("refreshPlaylists: $it")
-                playlistCollection.value = it
-            }
+            refreshPlaylists()
+        }
+        scope.launch {
+            refreshTracks()
         }
     }
 
-    private fun refreshTracks() {
-        scope.launch {
-            audioLibraryService.latestTrackCollection.collect {
-                println("refreshTracks: $it")
-                trackCollection.value = it
-            }
+    private suspend fun refreshPlaylists() {
+        println("refreshPlaylists")
+        audioLibraryService.latestPlaylistCollection.collect {
+            println("refreshPlaylists: $it")
+            playlistCollection.value = it
+        }
+    }
+
+    private suspend fun refreshTracks() {
+        audioLibraryService.latestTrackCollection.collect {
+            println("refreshTracks: $it")
+            trackCollection.value = it
         }
     }
 
@@ -146,8 +149,5 @@ class AudioLibraryViewModel(
             }
         }
     }
-
-
-
     // TODO add scroll pagination
 }

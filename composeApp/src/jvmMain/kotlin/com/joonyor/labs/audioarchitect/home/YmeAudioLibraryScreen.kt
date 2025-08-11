@@ -21,6 +21,8 @@ fun AudioLibraryScreen(viewModel: AudioLibraryViewModel) {
         val selectedTrack = viewModel.selectedTrack
         val currentTrackPlaying = viewModel.currentTrackPlaying
         val isPlaying = viewModel.isPlaying
+        var playlistCollection = viewModel.playlistCollection
+
         var searchQuery by remember { mutableStateOf("") }
 
         Scaffold(
@@ -53,7 +55,7 @@ fun AudioLibraryScreen(viewModel: AudioLibraryViewModel) {
                         .fillMaxHeight()
                         .background(MaterialTheme.colorScheme.primaryContainer)
                         .padding( 10.dp),
-                    playlistCollection = viewModel.playlistCollection.value,
+                    playlistCollection = playlistCollection.value,
                     onPlaylistEvent = { viewModel.onPlaylistEvent(it) }
                 )
                 TrackListScreen(
@@ -62,8 +64,10 @@ fun AudioLibraryScreen(viewModel: AudioLibraryViewModel) {
                         .fillMaxSize()
                         .padding(top = 10.dp, start = 10.dp, end = 10.dp, bottom = 100.dp),
                     trackCollection = viewModel.trackCollection.value,
+                    playlistCollection = playlistCollection.value,
                     selectedTrack = selectedTrack,
                     onMediaPlayerEvent = { viewModel.onAudioPlayerEvent(it) },
+                    onPlaylistEvent = { viewModel.onPlaylistEvent(it) },
                     isPlaying = isPlaying.value,
                     currentTrackPlaying = currentTrackPlaying.value,
                 )

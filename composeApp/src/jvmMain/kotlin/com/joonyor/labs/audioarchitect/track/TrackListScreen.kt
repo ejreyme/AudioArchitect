@@ -17,6 +17,9 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.joonyor.labs.audioarchitect.data.PlaylistEvent
+import com.joonyor.labs.audioarchitect.data.PlaylistEventType
+import com.joonyor.labs.audioarchitect.data.YmePlaylist
 import com.joonyor.labs.audioarchitect.data.YmeTrack
 import com.joonyor.labs.audioarchitect.player.AudioPlayerEvent
 import com.joonyor.labs.audioarchitect.player.AudioPlayerEventType
@@ -25,9 +28,11 @@ import com.joonyor.labs.audioarchitect.player.AudioPlayerEventType
 fun TrackListScreen(
     modifier: Modifier = Modifier,
     trackCollection: List<YmeTrack> = emptyList(),
+    playlistCollection: List<YmePlaylist> = emptyList(),
     selectedTrack: MutableState<YmeTrack>,
     currentTrackPlaying: YmeTrack,
     onMediaPlayerEvent: (AudioPlayerEvent) -> Unit,
+    onPlaylistEvent: (PlaylistEvent) -> Unit,
     isPlaying: Boolean = false,
 ) {
     Column(
@@ -36,13 +41,18 @@ fun TrackListScreen(
     ) {
         LazyColumn {
             items(trackCollection.size) { trackIndex ->
+                val track = trackCollection.getOrNull(trackIndex) ?: YmeTrack()
                 ContextMenuDataProvider(
                     items = {
-                        generateContextMenus()
+                        trackListMenu(
+                            track = track,
+                            playListCollection = playlistCollection,
+                            onMediaPlayerEvent = onMediaPlayerEvent,
+                            onPlaylistEvent = onPlaylistEvent
+                        )
                     }
                 ) {
                     SelectionContainer {
-                        val track = trackCollection.getOrNull(trackIndex) ?: YmeTrack()
                         TrackRowScreen(
                             modifier = Modifier.fillMaxWidth(),
                             trackRow = track,
@@ -59,14 +69,56 @@ fun TrackListScreen(
     }
 }
 
-fun generateContextMenus(): List<ContextMenuItem> {
-    val queueItem = ContextMenuItem("Queue") {
-        println("Queue")
-    }
-    val playlistItem = ContextMenuItem("Playlist") {
-        println("Playlist")
-    }
-    return listOf(queueItem, playlistItem)
+fun trackListMenu(
+    track: YmeTrack = YmeTrack(),
+    playListCollection: List<YmePlaylist> = emptyList(),
+    onMediaPlayerEvent: (AudioPlayerEvent) -> Unit,
+    onPlaylistEvent: (PlaylistEvent) -> Unit,
+): List<ContextMenuItem> {
+    val queueItem = ContextMenuItem(
+        label = "Queue",
+        onClick = {
+            onMediaPlayerEvent.invoke(
+                AudioPlayerEvent(
+                    track = track,
+                    type = AudioPlayerEventType.QUEUE
+                )
+            )
+        }
+    )
+
+    val addToPlaylistHeader = ContextMenuItem("Add to Playlists") {}
+
+    val availablePlaylistItems = createPlaylistMenuItems(
+        track = track,
+        playListCollection = playListCollection,
+        onPlaylistEvent = onPlaylistEvent
+    )
+
+    return listOf(queueItem, addToPlaylistHeader) + availablePlaylistItems
+}
+
+private fun createPlaylistMenuItems(
+    track: YmeTrack,
+    playListCollection: List<YmePlaylist>,
+    onPlaylistEvent: (PlaylistEvent) -> Unit
+): List<ContextMenuItem> {
+    return playListCollection
+        .filter { playlist -> !playlist.tracks.contains(track) }
+        .map { playlist ->
+            ContextMenuItem(
+                label = playlist.name,
+                onClick = {
+                    onPlaylistEvent.invoke(
+                        PlaylistEvent(
+                            track = track,
+                            playlist = playlist,
+                            type = PlaylistEventType.ADD_TRACK
+                        )
+                    )
+                }
+            )
+        }
 }
 
 @Composable

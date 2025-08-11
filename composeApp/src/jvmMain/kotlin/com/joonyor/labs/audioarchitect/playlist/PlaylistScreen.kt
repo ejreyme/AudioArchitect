@@ -2,7 +2,9 @@ package com.joonyor.labs.audioarchitect.playlist
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Divider
 import androidx.compose.material3.Button
@@ -18,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.unit.dp
 import com.joonyor.labs.audioarchitect.data.PlaylistEvent
 import com.joonyor.labs.audioarchitect.data.PlaylistEventType
 import com.joonyor.labs.audioarchitect.data.YmePlaylist
@@ -78,7 +81,32 @@ fun PlaylistScreen(
                 key = { index -> playlistCollection.getOrNull(index)?.id ?: index}
             ) { index ->
                 playlistCollection.getOrNull(index)?.let { playlist ->
-                    Text(playlist.name)
+                    Row {
+                        Column(
+                            modifier = Modifier
+//                                .weight(0.5f)
+                                .align(Alignment.CenterVertically)
+                        ) {
+                            Text(playlist.name)
+                        }
+//                        Column(
+//                            modifier = Modifier.weight(0.5f)
+//                        ) {
+//                            Button(
+//                                modifier = Modifier.padding(5.dp),
+//                                onClick = {
+//                                onPlaylistEvent.invoke(
+//                                    PlaylistEvent(
+//                                        playlist = playlist,
+//                                        type = PlaylistEventType.DELETE
+//                                    )
+//                                )
+//                            }) {
+//                                Text("Delete")
+//                            }
+//                        }
+                    }
+                    Divider()
                 }
             }
         }
