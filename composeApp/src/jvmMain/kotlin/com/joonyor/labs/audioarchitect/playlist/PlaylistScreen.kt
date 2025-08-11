@@ -1,11 +1,13 @@
 package com.joonyor.labs.audioarchitect.playlist
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.onClick
 import androidx.compose.material.Divider
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -37,6 +39,22 @@ fun PlaylistScreen(
     Column(
         modifier = modifier
     ) {
+        Row(
+            modifier = Modifier
+                .combinedClickable(
+                    onClick = {
+                        onPlaylistEvent.invoke(
+                            PlaylistEvent(
+                                playlist = YmePlaylist(),
+                                type = PlaylistEventType.LIBRARY
+                            )
+                        )
+                    }
+                )
+        ) {
+            Text("Library")
+        }
+        Divider()
         Button(onClick = { showNewPlaylistForm = !showNewPlaylistForm}) {
             Text("New Playlist")
         }
@@ -81,10 +99,23 @@ fun PlaylistScreen(
                 key = { index -> playlistCollection.getOrNull(index)?.id ?: index}
             ) { index ->
                 playlistCollection.getOrNull(index)?.let { playlist ->
-                    Row {
+                    Row(
+                        modifier = Modifier
+                            .combinedClickable(
+                                onClick = {
+                                    onPlaylistEvent.invoke(
+                                        PlaylistEvent(
+                                            playlist = playlist,
+                                            type = PlaylistEventType.VIEW
+                                        )
+                                    )
+                                }
+                            )
+                    ) {
                         Column(
                             modifier = Modifier
 //                                .weight(0.5f)
+
                                 .align(Alignment.CenterVertically)
                         ) {
                             Text(playlist.name)

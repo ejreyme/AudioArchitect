@@ -46,6 +46,15 @@ class AudioLibraryViewModel(
                 println("Add track to playlist: ${event.playlist.name}")
                 audioLibraryService.updatePlaylist(event.playlist, event.track)
             }
+            PlaylistEventType.VIEW -> {
+                println("View playlist: ${event.playlist.name}")
+                trackCollection.value = event.playlist.tracks
+            }
+            PlaylistEventType.LIBRARY -> {
+                scope.launch {
+                    refreshTracks()
+                }
+            }
             else -> {
                 println("Unknown playlist event")
             }

@@ -120,5 +120,5 @@ data class PlaylistEvent(
 )
 
 enum class PlaylistEventType {
-    EXPORT, CREATE, DELETE, DEFAULT, ADD_TRACK, REMOVE_TRACK
+    EXPORT, CREATE, DELETE, DEFAULT, ADD_TRACK, REMOVE_TRACK, VIEW,LIBRARY
 }
