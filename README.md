@@ -1,8 +1,8 @@
 # AudioArchitect 🎵
 
 A modern, cross-platform audio player built with Kotlin Multiplatform and Compose Multiplatform. AudioArchitect provides a clean, intuitive interface for playing and managing your music collection.
-
-![img.png](img.png)![img_1.png](img_1.png)![img.png](img.png)
+ 
+![img.png](img.png)
 
 ## Features ✨
 
