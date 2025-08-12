@@ -1,0 +1,36 @@
+package com.joonyor.labs.audio
+
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.ApplicationScope
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
+import com.joonyor.labs.audio.config.AppConfiguration.APP_NAME
+import com.joonyor.labs.audio.library.AudioLibraryScreen
+import com.joonyor.labs.audio.library.AudioLibraryService
+import com.joonyor.labs.audio.library.AudioLibraryViewModel
+import com.joonyor.labs.audio.player.VlcAudioPlayerService
+
+fun main() = application {
+    val audioPlayerService = VlcAudioPlayerService()
+    val audioLibraryService = AudioLibraryService()
+
+    Window(
+        onCloseRequest = { onExit(this, audioPlayerService) },
+        title = APP_NAME,
+        state = rememberWindowState(width = 1080.dp, height = 720.dp)
+    ) {
+        AudioLibraryScreen(
+            viewModel = AudioLibraryViewModel(
+                audioPlayerService = audioPlayerService,
+                audioLibraryService = audioLibraryService
+            )
+        )
+    }
+}
+
+fun onExit(applicationScope: ApplicationScope, audioPlayerService: VlcAudioPlayerService) {
+    println("Exiting")
+    audioPlayerService.exit()
+    applicationScope.exitApplication()
+}
