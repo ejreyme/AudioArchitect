@@ -11,6 +11,7 @@ import com.joonyor.labs.audio.playlist.YmePlaylist
 import com.joonyor.labs.audio.track.YmeTrack
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 
 class AudioLibraryViewModel(
@@ -25,15 +26,10 @@ class AudioLibraryViewModel(
     var trackCollection: MutableState<List<YmeTrack>> = mutableStateOf(emptyList())
     var playlistCollection: MutableState<List<YmePlaylist>> = mutableStateOf(emptyList())
     var trackPosition: MutableState<Float> = mutableStateOf(0.0f)
-
+    val trackQueue = Channel<YmeTrack>()
     init {
-        refresh()
-        scope.launch {
-            audioPlayerService.trackPosition.collect {
-                println("collecting trackPosition: $it")
-                trackPosition.value = it
-            }
-        }
+        refreshLibrary()
+        audioPlayerEventHandlers()
     }
 
     fun onPlaylistEvent(event: PlaylistEvent) {
@@ -72,7 +68,7 @@ class AudioLibraryViewModel(
         }
     }
 
-    private fun refresh() {
+    private fun refreshLibrary() {
         scope.launch {
             refreshPlaylists()
         }
@@ -123,9 +119,43 @@ class AudioLibraryViewModel(
             AudioPlayerEventType.REPEAT -> {
                 onRepeatClick(event.isRepeat)
             }
+            AudioPlayerEventType.QUEUE -> {
+                onQueueEvent(event.track)
+            }
             else -> {
                 println("Unknown audio player event")
             }
+        }
+    }
+
+    private fun onQueueEvent(track: YmeTrack) {
+        println("onQueueEvent: $track")
+        scope.launch { trackQueue.send(track) }
+    }
+
+    private fun audioPlayerEventHandlers() {
+        scope.launch {
+            audioPlayerService.trackPosition.collect {
+                println("collecting trackPosition: $it")
+                trackPosition.value = it
+            }
+        }
+
+        scope.launch {
+            audioPlayerService.isPlaying.collect {
+                println("collecting isPlaying: $it")
+                isPlaying.value = it
+                if (!isPlaying.value) {
+                    playNextTrack()
+                }
+            }
+        }
+    }
+
+    private suspend fun playNextTrack() {
+        val nextTrack = trackQueue.receive()
+        if (nextTrack.isNotNew) {
+            onPlayClick(nextTrack)
         }
     }
 
@@ -141,7 +171,7 @@ class AudioLibraryViewModel(
         audioPlayerService.play(track.filePath)
         selectedTrack.value = track
         currentTrackPlaying.value = track
-        isPlaying.value = true
+//        isPlaying.value = true
     }
 
     private fun onStopClick() {

@@ -25,4 +25,5 @@ data class YmeTrack(
     val duration: String = "00:00"
 ) {
     val isNew = filePath.isEmpty()
+    val isNotNew = !isNew
 }

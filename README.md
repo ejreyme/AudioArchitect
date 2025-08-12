@@ -201,3 +201,7 @@ For commercial licensing inquiries, please contact [your-email@example.com].
 - [Caprica Software](https://www.capricasoftware.co.uk) for VLC-J bindings
 
 Made with ❤️ by the AudioArchitect team
+
+## Benchmarks
+
+![img_1.png](img_1.png)

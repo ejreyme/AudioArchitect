@@ -2,8 +2,10 @@ package com.joonyor.labs.audio.library
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.TopAppBar
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.joonyor.labs.audio.player.AudioPlayerScreen
@@ -17,15 +19,37 @@ fun AudioLibraryScreen(viewModel: AudioLibraryViewModel) {
         var searchQuery by remember { mutableStateOf("") }
         Scaffold(
             topBar = {
-                TextField(
-                    value = searchQuery,
-                    onValueChange = {
-                        searchQuery = it
-                        viewModel.onSearchQuery(it)
-                    },
-                    label = { Text("Search Tracks") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                TopAppBar {
+                    Column(
+                        modifier = Modifier
+                            .weight(.2f)
+                            .padding(start = 10.dp),
+                    ) {
+                        Text("Audio Architect")
+                    }
+                    Column(
+                        modifier = Modifier
+                            .weight(.6f)
+                    ) {
+                        TextField(
+                            value = searchQuery,
+                            onValueChange = {
+                                searchQuery = it
+                                viewModel.onSearchQuery(it)
+                            },
+                            label = { Text("Search Tracks") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    Column(
+                        modifier = Modifier
+                            .weight(.2f)
+                            .padding(start = 10.dp),
+                        horizontalAlignment = Alignment.Start
+                    )  {
+                        Text("Profile")
+                    }
+                }
             },
             bottomBar = {
                 BottomAppBar {
@@ -37,7 +61,7 @@ fun AudioLibraryScreen(viewModel: AudioLibraryViewModel) {
                         onAudioPlayerEvent = { viewModel.onAudioPlayerEvent(it) },
                     )
                 }
-            }
+            },
         ) {
             Row(modifier = Modifier.fillMaxSize().padding(top = 50.dp)) {
                 PlaylistScreen(
