@@ -63,7 +63,7 @@ class AudioLibraryViewModel(
             if (query.isEmpty()) {
                 refreshTracks()
             } else {
-                trackCollection.value = trackCollection.value.filter { track -> track.title.contains(query, ignoreCase = true) }
+                trackCollection.value = audioLibraryService.search(query)
             }
         }
     }
@@ -145,7 +145,7 @@ class AudioLibraryViewModel(
             audioPlayerService.isPlaying.collect {
                 println("collecting isPlaying: $it")
                 isPlaying.value = it
-                if (!isPlaying.value) {
+                if (!it) {
                     playNextTrack()
                 }
             }
@@ -171,7 +171,7 @@ class AudioLibraryViewModel(
         audioPlayerService.play(track.filePath)
         selectedTrack.value = track
         currentTrackPlaying.value = track
-//        isPlaying.value = true
+        isPlaying.value = true
     }
 
     private fun onStopClick() {

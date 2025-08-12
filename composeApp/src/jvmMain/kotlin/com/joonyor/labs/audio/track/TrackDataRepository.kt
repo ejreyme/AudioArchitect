@@ -5,16 +5,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class TrackDataRepository {
-    // write-only
-    private val _trackDataSource = MutableStateFlow<List<YmeTrack>>(emptyList())
-    // read-only
-    val latestPlaylistCollection: Flow<List<YmeTrack>> = _trackDataSource.asStateFlow()
+    // read/write-only
+    val trackDataSource = MutableStateFlow<List<YmeTrack>>(emptyList())
+    // external read-only
+    val latestPlaylistCollection: Flow<List<YmeTrack>> = trackDataSource.asStateFlow()
 
 
     fun addTrack(track: YmeTrack) {
-        _trackDataSource.value = _trackDataSource.value.toMutableList().apply {
+        trackDataSource.value = trackDataSource.value.toMutableList().apply {
             add(track)
         }
+    }
+
+    fun search(query: String): List<YmeTrack> {
+        return trackDataSource.value.filter { track -> track.title.contains(query, ignoreCase = true) }
     }
 }
 

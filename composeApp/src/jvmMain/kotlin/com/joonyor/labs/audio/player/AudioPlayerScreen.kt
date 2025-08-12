@@ -26,7 +26,7 @@ fun AudioPlayerScreen(
     ) {
         Row(modifier = Modifier.weight(0.2f)) {
             Slider(
-                enabled = !currentTrackPlaying.isNew && isPlaying,
+                enabled = currentTrackPlaying.isNotNew,
                 value = trackPosition.value,
                 onValueChange = {
                     trackPosition.value = it

@@ -7,20 +7,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlin.random.Random
 
 class PlaylistDataRepository {
-    // write-only
-    private val _playlistDataSource = MutableStateFlow<List<YmePlaylist>>(emptyList())
-    // read-only
-    val latestPlaylistCollection: Flow<List<YmePlaylist>> = _playlistDataSource.asStateFlow()
+    // read/write-only
+    val playlistDataSource = MutableStateFlow<List<YmePlaylist>>(emptyList())
+    // external read-only
+    val latestPlaylistCollection: Flow<List<YmePlaylist>> = playlistDataSource.asStateFlow()
 
     fun addPlaylist(playlist: YmePlaylist) {
-        _playlistDataSource.value = _playlistDataSource.value.toMutableList().apply {
+        playlistDataSource.value = playlistDataSource.value.toMutableList().apply {
             add(playlist)
         }
     }
 
     fun updatePlaylist(playlist: YmePlaylist) {
         findPlaylistById(playlist.id)?.let {
-            _playlistDataSource.value = _playlistDataSource.value.toMutableList().apply {
+            playlistDataSource.value = playlistDataSource.value.toMutableList().apply {
                 set(indexOf(it), playlist)
             }
         }
@@ -36,7 +36,7 @@ class PlaylistDataRepository {
     }
 
     fun findPlaylistById(id: Int): YmePlaylist? {
-        return _playlistDataSource.value.find { it.id == id }
+        return playlistDataSource.value.find { it.id == id }
     }
 
     fun generatePlaylistList(): List<YmePlaylist> {

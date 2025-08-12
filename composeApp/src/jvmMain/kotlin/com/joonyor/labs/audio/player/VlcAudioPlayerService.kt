@@ -73,8 +73,10 @@ class VlcAudioPlayerService() : AudioPlayerService {
     private fun setupMediaPlayerEventListener() {
         vlcAudioPlayer.mediaPlayer().events().addMediaPlayerEventListener(object : MediaPlayerEventAdapter() {
             override fun playing(mediaPlayer: MediaPlayer?) {
-                println("player event playing")
-                scope.launch { isPlayingChannel.send(true) }
+                scope.launch {
+                    println("player event playing")
+                    isPlayingChannel.send(true)
+                }
             }
 
             // positionChanged is a percentage between 0.0 and 1.0
@@ -88,7 +90,7 @@ class VlcAudioPlayerService() : AudioPlayerService {
 
             override fun paused(mediaPlayer: MediaPlayer?) {
                 println("player event paused")
-                scope.launch { isPlayingChannel.send(true) }
+                scope.launch { isPlayingChannel.send(false) }
             }
 
             override fun finished(mediaPlayer: MediaPlayer?) {

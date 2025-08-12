@@ -22,13 +22,9 @@ class AudioLibraryService() {
     private var playlistDataRepository: PlaylistDataRepository = PlaylistDataRepository()
     private var trackDataRepository: TrackDataRepository = TrackDataRepository()
 
-    // write-only
-    private val _playlistCollection = MutableStateFlow<List<YmePlaylist>>(emptyList())
-    private val _trackCollection = MutableStateFlow<List<YmeTrack>>(emptyList())
-
     // read-only
-    val latestPlaylistCollection: Flow<List<YmePlaylist>> = _playlistCollection.asStateFlow()
-    val latestTrackCollection: Flow<List<YmeTrack>> = _trackCollection.asStateFlow()
+    val latestPlaylistCollection: Flow<List<YmePlaylist>> = playlistDataRepository.latestPlaylistCollection
+    val latestTrackCollection: Flow<List<YmeTrack>> = trackDataRepository.latestPlaylistCollection
 
     init {
         loadTracks()
@@ -48,12 +44,16 @@ class AudioLibraryService() {
         playlistDataRepository.updatePlaylist(playlist, track)
     }
 
+    fun search(query: String): List<YmeTrack> {
+        return trackDataRepository.search(query)
+    }
+
     // Emit updated list to trigger UI recomposition
     private fun triggerPlaylistCollectionUpdate() {
         scope.launch {
             playlistDataRepository.latestPlaylistCollection.collect {
                 println("triggerPlaylistCollectionUpdate: $it")
-                _playlistCollection.value = it
+                playlistDataRepository.playlistDataSource.value = it
             }
         }
     }
@@ -63,7 +63,7 @@ class AudioLibraryService() {
         scope.launch {
             trackDataRepository.latestPlaylistCollection.collect {
                 println("triggerTrackCollectionUpdate: $it")
-                _trackCollection.value = it
+                trackDataRepository.trackDataSource.value = it
             }
         }
     }
