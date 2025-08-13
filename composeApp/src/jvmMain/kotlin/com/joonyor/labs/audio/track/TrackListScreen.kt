@@ -10,10 +10,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Button
+import androidx.compose.material.Chip
+import androidx.compose.material.ChipDefaults
 import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -32,7 +40,7 @@ fun TrackListScreen(
     currentTrackPlaying: YmeTrack,
     trackCollection: List<YmeTrack> = emptyList(),
     playlistCollection: List<YmePlaylist> = emptyList(),
-    onMediaPlayerEvent: (AudioPlayerEvent) -> Unit,
+    onAudioPlayerEvent: (AudioPlayerEvent) -> Unit,
     onPlaylistEvent: (PlaylistEvent) -> Unit,
 ) {
     Column(
@@ -55,7 +63,7 @@ fun TrackListScreen(
                         trackListMenu(
                             track = track,
                             playListCollection = playlistCollection,
-                            onMediaPlayerEvent = onMediaPlayerEvent,
+                            onAudioPlayerEvent = onAudioPlayerEvent,
                             onPlaylistEvent = onPlaylistEvent
                         )
                     }
@@ -66,7 +74,7 @@ fun TrackListScreen(
                             trackRow = track,
                             selectedTrack = selectedTrack,
                             currentTrackPlaying = currentTrackPlaying,
-                            onMediaPlayerEvent = onMediaPlayerEvent,
+                            onAudioPlayerEvent = onAudioPlayerEvent,
                             isPlaying = isPlaying,
                         )
                         Divider()
@@ -77,16 +85,114 @@ fun TrackListScreen(
     }
 }
 
-fun trackListMenu(
+@Composable
+fun TrackRowScreen(
+    trackRow: YmeTrack = YmeTrack(),
+    modifier: Modifier = Modifier,
+    selectedTrack: MutableState<YmeTrack>,
+    currentTrackPlaying: YmeTrack,
+    onAudioPlayerEvent: (AudioPlayerEvent) -> Unit,
+    isPlaying: Boolean = false,
+) {
+    Row(
+        modifier = modifier
+            .combinedClickable(
+                onClick = { selectedTrack.value = trackRow },
+                onDoubleClick = {
+                    selectedTrack.value = trackRow
+                    onAudioPlayerEvent.invoke(
+                        AudioPlayerEvent(
+                            track = selectedTrack.value,
+                            type = if (isPlaying) AudioPlayerEventType.PAUSE else AudioPlayerEventType.PLAY
+                        )
+                    )
+                }
+            )
+    ) {
+        Column(modifier = Modifier.weight(0.2f)) {
+            Button(
+                onClick = {
+                    selectedTrack.value = trackRow
+                    onAudioPlayerEvent.invoke(
+                        AudioPlayerEvent(
+                            track = selectedTrack.value,
+                            type = if (isPlaying) AudioPlayerEventType.PAUSE else AudioPlayerEventType.PLAY
+                        )
+                    )
+                }
+            ) {
+                Text(
+                    text = if (isPlaying && currentTrackPlaying == trackRow) "Pause" else "Play"
+                )
+            }
+        }
+        Column(modifier = Modifier.weight(0.6f)) {
+            if (trackRow.title.isNotEmpty() && trackRow.artist.isNotEmpty()) {
+                Row {
+                    Text(trackRow.title)
+                }
+                Row {
+                    Text(trackRow.artist)
+                }
+            } else {
+                Text("Unknown track")
+            }
+        }
+        Column(modifier = Modifier.weight(0.2f)) {
+            if (trackRow.duration.isNotEmpty()) {
+                Text(trackRow.duration)
+            } else {
+                Text("Unknown duration")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun TrackDetailScreen(
+    modifier: Modifier = Modifier,
+    selectedTrack: YmeTrack
+) {
+    Column(
+        modifier = modifier.padding(10.dp)
+    ) {
+        Text(selectedTrack.title)
+        Text(selectedTrack.artist)
+        Divider()
+        Text("metadata")
+
+        val list = listOf("Rock", "Metal", "Pop", "Folk", "Jazz")
+        list.forEach {
+            Column {
+                var active by remember { mutableStateOf(true) }
+                Chip(
+                    colors =
+                        if (active)
+                            ChipDefaults.chipColors(backgroundColor = MaterialTheme.colors.primaryVariant)
+                        else
+                            ChipDefaults.chipColors(backgroundColor = MaterialTheme.colors.secondaryVariant),
+                    onClick = {
+                        active = !active
+                    }
+                ) {
+                    Text(it)
+                }
+            }
+        }
+    }
+}
+
+private fun trackListMenu(
     track: YmeTrack = YmeTrack(),
     playListCollection: List<YmePlaylist> = emptyList(),
-    onMediaPlayerEvent: (AudioPlayerEvent) -> Unit,
+    onAudioPlayerEvent: (AudioPlayerEvent) -> Unit,
     onPlaylistEvent: (PlaylistEvent) -> Unit,
 ): List<ContextMenuItem> {
     val queueItem = ContextMenuItem(
         label = "Queue",
         onClick = {
-            onMediaPlayerEvent.invoke(
+            onAudioPlayerEvent.invoke(
                 AudioPlayerEvent(
                     track = track,
                     type = AudioPlayerEventType.QUEUE
@@ -127,82 +233,4 @@ private fun createPlaylistMenuItems(
                 }
             )
         }
-}
-
-@Composable
-fun TrackRowScreen(
-    trackRow: YmeTrack = YmeTrack(),
-    modifier: Modifier = Modifier,
-    selectedTrack: MutableState<YmeTrack>,
-    currentTrackPlaying: YmeTrack,
-    onMediaPlayerEvent: (AudioPlayerEvent) -> Unit,
-    isPlaying: Boolean = false,
-) {
-    Row(
-        modifier = modifier
-            .combinedClickable(
-                onClick = { selectedTrack.value = trackRow },
-                onDoubleClick = {
-                    selectedTrack.value = trackRow
-                    onMediaPlayerEvent.invoke(
-                        AudioPlayerEvent(
-                            track = selectedTrack.value,
-                            type = if (isPlaying) AudioPlayerEventType.PAUSE else AudioPlayerEventType.PLAY
-                        )
-                    )
-                }
-            )
-    ) {
-        Column(modifier = Modifier.weight(0.2f)) {
-            Button(
-                onClick = {
-                    selectedTrack.value = trackRow
-                    onMediaPlayerEvent.invoke(
-                        AudioPlayerEvent(
-                            track = selectedTrack.value,
-                            type = if (isPlaying) AudioPlayerEventType.PAUSE else AudioPlayerEventType.PLAY
-                        )
-                    )
-                }
-            ) {
-                Text(
-                    text = if (isPlaying && currentTrackPlaying == trackRow) "Pause" else "Play"
-                )
-            }
-        }
-        Column(modifier = Modifier.weight(0.6f)) {
-            if (trackRow.title.isNotEmpty() && trackRow.artist.isNotEmpty()) {
-                Row {
-                    Text(trackRow.title)
-                }
-                Row {
-                    Text(trackRow.artist)
-                }
-            } else {
-                Text("Unknown track")
-            }
-        }
-        Column(modifier = Modifier.weight(0.2f)) {
-            if (trackRow.duration.isNotEmpty()) {
-                Text(trackRow.duration)
-            } else {
-                Text("Unknown duration")
-            }
-        }
-    }
-}
-
-@Composable
-fun TrackDetailScreen(
-    modifier: Modifier = Modifier,
-    selectedTrack: YmeTrack
-) {
-    Column(
-        modifier = modifier.padding(10.dp)
-    ) {
-        Text(selectedTrack.title)
-        Text(selectedTrack.artist)
-        Divider()
-        Text("metadata")
-    }
 }

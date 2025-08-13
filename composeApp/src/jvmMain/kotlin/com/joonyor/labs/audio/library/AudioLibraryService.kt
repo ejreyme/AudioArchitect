@@ -8,8 +8,6 @@ import com.joonyor.labs.audio.track.YmeTrack
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
@@ -17,34 +15,39 @@ import org.jaudiotagger.tag.FieldKey
 import java.io.File
 
 class AudioLibraryService() {
-    val scope = CoroutineScope(Dispatchers.IO)
-
     private var playlistDataRepository: PlaylistDataRepository = PlaylistDataRepository()
     private var trackDataRepository: TrackDataRepository = TrackDataRepository()
 
     // read-only
     val latestPlaylistCollection: Flow<List<YmePlaylist>> = playlistDataRepository.latestPlaylistCollection
-    val latestTrackCollection: Flow<List<YmeTrack>> = trackDataRepository.latestPlaylistCollection
+    val latestTrackCollection: Flow<List<YmeTrack>> = trackDataRepository.latestTrackCollection
+
+    val scope = CoroutineScope(Dispatchers.IO)
 
     init {
-        loadTracks()
-        loadPlayLists()
+        initLibrary()
         triggerPlaylistCollectionUpdate()
         triggerTrackCollectionUpdate()
     }
 
-    fun addPlaylist(playlist: YmePlaylist) {
+    fun createPlaylist(playlist: YmePlaylist) {
         println("addPlaylist")
-        playlistDataRepository.addPlaylist(playlist)
+        playlistDataRepository.createPlaylist(playlist)
         triggerPlaylistCollectionUpdate()
     }
 
     fun updatePlaylist(playlist: YmePlaylist, track: YmeTrack) {
         println("updatePlaylist")
         playlistDataRepository.updatePlaylist(playlist, track)
+        triggerPlaylistCollectionUpdate()
     }
 
-    fun search(query: String): List<YmeTrack> {
+    fun deletePlaylist(playlist: YmePlaylist) {
+        playlistDataRepository.deletePlaylist(playlist)
+        triggerPlaylistCollectionUpdate()
+    }
+
+    fun searchTracks(query: String): List<YmeTrack> {
         return trackDataRepository.search(query)
     }
 
@@ -53,7 +56,7 @@ class AudioLibraryService() {
         scope.launch {
             playlistDataRepository.latestPlaylistCollection.collect {
                 println("triggerPlaylistCollectionUpdate: $it")
-                playlistDataRepository.playlistDataSource.value = it
+                playlistDataRepository.dataSource.value = it
             }
         }
     }
@@ -61,24 +64,28 @@ class AudioLibraryService() {
     // Emit updated list to trigger UI recomposition
     private fun triggerTrackCollectionUpdate() {
         scope.launch {
-            trackDataRepository.latestPlaylistCollection.collect {
+            trackDataRepository.latestTrackCollection.collect {
                 println("triggerTrackCollectionUpdate: $it")
-                trackDataRepository.trackDataSource.value = it
+                trackDataRepository.dataSource.value = it
             }
         }
     }
 
-    private fun loadTracks() {
+    private fun initLibrary() {
+        trackDataRepository.dataSource.value = loadTracksFromPath()
+    }
+
+    private fun loadTracksFromPath(pathname: String = AppConfiguration.LIBRARY_ROOT_PATH): List<YmeTrack> {
         try {
-            File(AppConfiguration.LIBRARY_ROOT_PATH).walkTopDown().filter { it.isFile }
+            return File(pathname).walkTopDown()
+                .filter { it.isFile }
                 .filter { it.extension == "wav" || it.extension == "mp3" || it.extension == "m4a" }
-                .forEach { trackDataRepository.addTrack(toTrack(it)) }
+                .map { toTrack(it) }
+                .toList()
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    private fun loadPlayLists() {
+        return emptyList()
     }
 
     private fun toTrack(file: File): YmeTrack {
@@ -103,8 +110,3 @@ class AudioLibraryService() {
         return String.format("%02d:%02d", minutes, seconds)
     }
 }
-
-
-
-
-

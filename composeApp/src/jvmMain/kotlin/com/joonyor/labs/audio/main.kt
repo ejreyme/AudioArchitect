@@ -9,6 +9,7 @@ import com.joonyor.labs.audio.config.AppConfiguration.APP_NAME
 import com.joonyor.labs.audio.library.AudioLibraryScreen
 import com.joonyor.labs.audio.library.AudioLibraryService
 import com.joonyor.labs.audio.library.AudioLibraryViewModel
+import com.joonyor.labs.audio.player.AudioPlayerViewModel
 import com.joonyor.labs.audio.player.VlcAudioPlayerService
 
 fun main() = application {
@@ -21,9 +22,11 @@ fun main() = application {
         state = rememberWindowState(width = 1080.dp, height = 720.dp)
     ) {
         AudioLibraryScreen(
-            viewModel = AudioLibraryViewModel(
-                audioPlayerService = audioPlayerService,
+            libraryViewModel = AudioLibraryViewModel(
                 audioLibraryService = audioLibraryService
+            ),
+            audioPlayerViewModel = AudioPlayerViewModel(
+                audioPlayerService = audioPlayerService
             )
         )
     }

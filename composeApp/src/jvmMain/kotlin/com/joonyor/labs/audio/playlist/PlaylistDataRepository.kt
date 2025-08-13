@@ -8,19 +8,26 @@ import kotlin.random.Random
 
 class PlaylistDataRepository {
     // read/write-only
-    val playlistDataSource = MutableStateFlow<List<YmePlaylist>>(emptyList())
+    val dataSource = MutableStateFlow<List<YmePlaylist>>(emptyList())
     // external read-only
-    val latestPlaylistCollection: Flow<List<YmePlaylist>> = playlistDataSource.asStateFlow()
+    val latestPlaylistCollection: Flow<List<YmePlaylist>> = dataSource.asStateFlow()
 
-    fun addPlaylist(playlist: YmePlaylist) {
-        playlistDataSource.value = playlistDataSource.value.toMutableList().apply {
+    // CREATE
+    fun createPlaylist(playlist: YmePlaylist) {
+        dataSource.value = dataSource.value.toMutableList().apply {
             add(playlist)
         }
     }
 
+    // READ
+    fun readPlaylist(id: Int): YmePlaylist? {
+        return dataSource.value.find { it.id == id }
+    }
+
+    // UPDATE
     fun updatePlaylist(playlist: YmePlaylist) {
-        findPlaylistById(playlist.id)?.let {
-            playlistDataSource.value = playlistDataSource.value.toMutableList().apply {
+        readPlaylist(playlist.id)?.let {
+            dataSource.value = dataSource.value.toMutableList().apply {
                 set(indexOf(it), playlist)
             }
         }
@@ -35,11 +42,14 @@ class PlaylistDataRepository {
         updatePlaylist(updatedPlaylist)
     }
 
-    fun findPlaylistById(id: Int): YmePlaylist? {
-        return playlistDataSource.value.find { it.id == id }
+    // DELETE
+    fun deletePlaylist(playlist: YmePlaylist) {
+        dataSource.value = dataSource.value.toMutableList().apply {
+            remove(playlist)
+        }
     }
 
-    fun generatePlaylistList(): List<YmePlaylist> {
+    private fun generatePlaylistList(): List<YmePlaylist> {
         return listOf(
             YmePlaylist(1, "Playlist 1"),
             YmePlaylist(2, "Playlist 2"),
@@ -64,5 +74,12 @@ data class PlaylistEvent(
 )
 
 enum class PlaylistEventType {
-    EXPORT, CREATE, DELETE, DEFAULT, ADD_TRACK, REMOVE_TRACK, VIEW,LIBRARY,HOME,EXPLORE
+    DEFAULT,
+    CREATE,
+    READ,
+    UPDATE,
+    DELETE,
+    ADD_TRACK,
+    REMOVE_TRACK,
+    EXPORT,
 }
