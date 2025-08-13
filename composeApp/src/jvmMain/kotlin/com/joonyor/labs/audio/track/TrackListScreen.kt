@@ -139,8 +139,8 @@ fun TrackRowScreen(
             }
         }
         Column(modifier = Modifier.weight(0.2f)) {
-            if (trackRow.duration.isNotEmpty()) {
-                Text(trackRow.duration)
+            if (trackRow.durationDisplay.isNotEmpty()) {
+                Text(trackRow.durationDisplay)
             } else {
                 Text("Unknown duration")
             }
@@ -190,7 +190,7 @@ private fun trackListMenu(
     onPlaylistEvent: (PlaylistEvent) -> Unit,
 ): List<ContextMenuItem> {
     val queueItem = ContextMenuItem(
-        label = "Queue",
+        label = "Queue Track",
         onClick = {
             onAudioPlayerEvent.invoke(
                 AudioPlayerEvent(
@@ -201,15 +201,13 @@ private fun trackListMenu(
         }
     )
 
-    val addToPlaylistHeader = ContextMenuItem("Add to Playlists") {}
-
     val availablePlaylistItems = createPlaylistMenuItems(
         track = track,
         playListCollection = playListCollection,
         onPlaylistEvent = onPlaylistEvent
     )
 
-    return listOf(queueItem, addToPlaylistHeader) + availablePlaylistItems
+    return listOf(queueItem) + availablePlaylistItems
 }
 
 private fun createPlaylistMenuItems(
@@ -221,7 +219,7 @@ private fun createPlaylistMenuItems(
         .filter { playlist -> !playlist.tracks.contains(track) }
         .map { playlist ->
             ContextMenuItem(
-                label = playlist.name,
+                label = "${playlist.name} +",
                 onClick = {
                     onPlaylistEvent.invoke(
                         PlaylistEvent(

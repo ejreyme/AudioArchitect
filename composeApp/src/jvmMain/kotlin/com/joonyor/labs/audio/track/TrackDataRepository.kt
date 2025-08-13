@@ -48,8 +48,9 @@ data class YmeTrack(
     val filePath: String = "",
     val title: String = "Unknown title",
     val artist: String = "Unknown artist",
-    val duration: String = "00:00",
-    val tags: Set<YmeTag> = emptySet()
+    val durationDisplay: String = "00:00",
+    val tags: Set<YmeTag> = emptySet(),
+    val duration: Int = 0,
 ) {
     val isNew = filePath.isEmpty()
     val isNotNew = !isNew

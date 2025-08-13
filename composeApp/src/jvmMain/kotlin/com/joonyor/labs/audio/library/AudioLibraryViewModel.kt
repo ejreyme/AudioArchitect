@@ -49,6 +49,7 @@ class AudioLibraryViewModel(
             PlaylistEventType.READ -> onPlaylistReadEvent(event)
             PlaylistEventType.ADD_TRACK -> onPlaylistAddTrackEvent(event)
             PlaylistEventType.DELETE -> onPlaylistDeleteEvent(event)
+            PlaylistEventType.EXPORT -> onPlaylistExportEvent(event)
             else -> {
                 println("Unknown playlist event")
             }
@@ -63,6 +64,11 @@ class AudioLibraryViewModel(
                 trackCollection.value = audioLibraryService.searchTracks(query)
             }
         }
+    }
+
+    private fun onPlaylistExportEvent(event: PlaylistEvent) {
+        println("Export playlist: ${event.playlist.name}")
+        audioLibraryService.exportPlaylist(event.playlist)
     }
 
     private fun onPlaylistDeleteEvent(event: PlaylistEvent) {

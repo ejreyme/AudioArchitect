@@ -57,7 +57,7 @@ fun PlaylistScreen(
                                 Key.Enter -> {
                                     onPlaylistEvent.invoke(
                                         PlaylistEvent(
-                                            playlist = YmePlaylist(id = Random.nextInt(1,1000),name = playlistName.value),
+                                            playlist = YmePlaylist(id = Random.nextInt(1,1000),name = sanitizePlaylistName(playlistName.value)),
                                             type = PlaylistEventType.CREATE
                                         )
                                     )
@@ -153,4 +153,9 @@ private fun playlistMenu(
             }
         ),
     )
+}
+
+private fun sanitizePlaylistName(name: String): String {
+    val nonAlphaNumRegex = "[^a-zA-Z0-9]".toRegex() // Matches any character that is NOT a letter or a digit
+    return name.replace(nonAlphaNumRegex, "")
 }
