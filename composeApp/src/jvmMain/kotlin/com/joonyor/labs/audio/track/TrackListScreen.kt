@@ -1,5 +1,6 @@
 package com.joonyor.labs.audio.track
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ContextMenuDataProvider
 import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.combinedClickable
@@ -14,7 +15,10 @@ import androidx.compose.material.Chip
 import androidx.compose.material.ChipDefaults
 import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -139,11 +143,7 @@ fun TrackRowScreen(
             }
         }
         Column(modifier = Modifier.weight(0.2f)) {
-            if (trackRow.durationDisplay.isNotEmpty()) {
-                Text(trackRow.durationDisplay)
-            } else {
-                Text("Unknown duration")
-            }
+            Text(trackRow.durationDisplay())
         }
     }
 }
@@ -152,32 +152,75 @@ fun TrackRowScreen(
 @Composable
 fun TrackDetailScreen(
     modifier: Modifier = Modifier,
-    selectedTrack: YmeTrack
+    selectedTrack: YmeTrack,
+    onTrackEvent: (TrackEvent) -> Unit,
 ) {
     Column(
         modifier = modifier.padding(10.dp)
     ) {
+        val activeTags = selectedTrack.tags.subtract(tagRepository())
+        val availableTags = tagRepository().subtract(activeTags)
+        var showEditTag by remember { mutableStateOf(false) }
+
         Text(selectedTrack.title)
         Text(selectedTrack.artist)
         Divider()
-        Text("metadata")
-
-        val list = listOf("Rock", "Metal", "Pop", "Folk", "Jazz")
-        list.forEach {
+        Text("Duration: ${selectedTrack.durationDisplay()}")
+        Button(onClick = { showEditTag = !showEditTag }) {
+            Icon(
+                imageVector = Icons.Outlined.Add,
+                contentDescription = "Edit Tags",
+            )
+            Text("Edit Tags")
+        }
+        AnimatedVisibility(showEditTag) {
             Column {
-                var active by remember { mutableStateOf(true) }
-                Chip(
-                    colors =
-                        if (active)
-                            ChipDefaults.chipColors(backgroundColor = MaterialTheme.colors.primaryVariant)
-                        else
-                            ChipDefaults.chipColors(backgroundColor = MaterialTheme.colors.secondaryVariant),
-                    onClick = {
-                        active = !active
-                    }
-                ) {
-                    Text(it)
+                Text("Active Tags")
+                TrackTagScreen(
+                    selectedTrack = selectedTrack,
+                    onTrackEvent = onTrackEvent,
+                    tags = activeTags
+                )
+                Divider()
+                Text("Available Tags")
+                TrackTagScreen(
+                    selectedTrack = selectedTrack,
+                    onTrackEvent = onTrackEvent,
+                    tags = availableTags
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun TrackTagScreen(
+    selectedTrack: YmeTrack,
+    onTrackEvent: (TrackEvent) -> Unit,
+    tags: Set<YmeTag>
+) {
+    tags.forEach {
+        Row {
+            var active by remember { mutableStateOf(false) }
+            Chip(
+                colors =
+                    if (active)
+                        ChipDefaults.chipColors(backgroundColor = MaterialTheme.colors.onPrimary)
+                    else
+                        ChipDefaults.chipColors(backgroundColor = MaterialTheme.colors.secondaryVariant),
+                onClick = {
+                    active = !active
+                    onTrackEvent.invoke(
+                        TrackEvent(
+                            track = selectedTrack,
+                            type = TrackEventType.ADD_TAG,
+                            tag = YmeTag(it.name, active)
+                        )
+                    )
                 }
+            ) {
+                Text(it.name)
             }
         }
     }
@@ -231,4 +274,12 @@ private fun createPlaylistMenuItems(
                 }
             )
         }
+}
+
+private fun tagRepository() : Set<YmeTag> {
+    return setOf("Rock", "Metal", "Pop", "Folk", "Jazz")
+        .stream()
+        .map { YmeTag(it, false) }
+        .toList()
+        .toSet()
 }

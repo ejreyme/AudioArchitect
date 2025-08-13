@@ -2,9 +2,12 @@ package com.joonyor.labs.audio.library
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.joonyor.labs.audio.loggerFor
 import com.joonyor.labs.audio.playlist.PlaylistEvent
 import com.joonyor.labs.audio.playlist.PlaylistEventType
 import com.joonyor.labs.audio.playlist.YmePlaylist
+import com.joonyor.labs.audio.track.TrackEvent
+import com.joonyor.labs.audio.track.TrackEventType
 import com.joonyor.labs.audio.track.YmeTrack
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,9 +24,8 @@ enum class NavEventType {
     PLAYLIST,
 }
 
-class AudioLibraryViewModel(
-    private val audioLibraryService: AudioLibraryService
-) {
+class AudioLibraryViewModel(private val audioLibraryService: AudioLibraryService) {
+    private val logger = loggerFor(javaClass)
     val scope = CoroutineScope(Dispatchers.IO)
     var selectedPlaylist: MutableState<YmePlaylist> = mutableStateOf(YmePlaylist(id = 0, name = "Library"))
     var trackCollection: MutableState<List<YmeTrack>> = mutableStateOf(emptyList())
@@ -51,9 +53,23 @@ class AudioLibraryViewModel(
             PlaylistEventType.DELETE -> onPlaylistDeleteEvent(event)
             PlaylistEventType.EXPORT -> onPlaylistExportEvent(event)
             else -> {
-                println("Unknown playlist event")
+                logger.debug("Unknown playlist event")
             }
         }
+    }
+
+    fun onTrackEvent(event: TrackEvent) {
+        when (event.type) {
+            TrackEventType.ADD_TAG -> onTrackAddTagEvent(event)
+            else -> {
+                logger.debug("Unknown track event")
+            }
+        }
+    }
+
+    private fun onTrackAddTagEvent(event: TrackEvent) {
+        logger.debug("Add tag to track: ${event.track.title}")
+        audioLibraryService.updateTrack(event.track, event.tag)
     }
 
     fun onSearchQuery(query: String) {
@@ -67,7 +83,7 @@ class AudioLibraryViewModel(
     }
 
     private fun onPlaylistExportEvent(event: PlaylistEvent) {
-        println("Export playlist: ${event.playlist.name}")
+        logger.debug("Export playlist: ${event.playlist.name}")
         audioLibraryService.exportPlaylist(event.playlist)
     }
 
@@ -95,17 +111,17 @@ class AudioLibraryViewModel(
     }
     
     private fun onPlaylistCreateEvent(event: PlaylistEvent) {
-        println("Create playlist: ${event.playlist.name}")
+        logger.debug("Create playlist: ${event.playlist.name}")
         audioLibraryService.createPlaylist(event.playlist)
     }
 
     private fun onPlaylistAddTrackEvent(event: PlaylistEvent) {
-        println("Add track to playlist: ${event.playlist.name}")
+        logger.debug("Add track to playlist: ${event.playlist.name}")
         audioLibraryService.updatePlaylist(event.playlist, event.track)
     }
 
     private fun onPlaylistReadEvent(event: PlaylistEvent) {
-        println("View playlist: ${event.playlist.name}")
+        logger.debug("View playlist: ${event.playlist.name}")
         currentScreen.value = NavEventType.PLAYLIST
         trackCollection.value = event.playlist.tracks
         selectedPlaylist.value = event.playlist
@@ -121,16 +137,16 @@ class AudioLibraryViewModel(
     }
 
     private suspend fun refreshPlaylists() {
-        println("refreshPlaylists")
+        logger.debug("refreshPlaylists")
         audioLibraryService.latestPlaylistCollection.collect {
-            println("refreshPlaylists: $it")
+            logger.debug("refreshPlaylists: ${it.size}")
             playlistCollection.value = it
         }
     }
 
     private suspend fun refreshTracks() {
         audioLibraryService.latestTrackCollection.collect {
-            println("refreshTracks: $it")
+            logger.debug("refreshTracks: ${it.size}")
             trackCollection.value = it
         }
     }

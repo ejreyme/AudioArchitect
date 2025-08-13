@@ -2,10 +2,12 @@ package com.joonyor.labs.audio.player
 
 import com.joonyor.labs.audio.track.YmeTrack
 import kotlinx.coroutines.flow.Flow
+import java.util.concurrent.TimeUnit
 
 interface AudioPlayerService {
     val trackPosition: Flow<Float>
     val isPlaying: Flow<Boolean>
+    val trackPositionDelay: Long
     fun play(filePath: String)
     fun stop()
     fun pause()

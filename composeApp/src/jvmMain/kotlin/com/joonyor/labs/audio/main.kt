@@ -11,6 +11,10 @@ import com.joonyor.labs.audio.library.AudioLibraryService
 import com.joonyor.labs.audio.library.AudioLibraryViewModel
 import com.joonyor.labs.audio.player.AudioPlayerViewModel
 import com.joonyor.labs.audio.player.VlcAudioPlayerService
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+fun <T> loggerFor(clazz: Class<T>): Logger = LoggerFactory.getLogger(clazz)
 
 fun main() = application {
     val audioPlayerService = VlcAudioPlayerService()
@@ -19,7 +23,7 @@ fun main() = application {
     Window(
         onCloseRequest = { onExit(this, audioPlayerService) },
         title = APP_NAME,
-        state = rememberWindowState(width = 1080.dp, height = 720.dp)
+        state = rememberWindowState(width = 1440.dp, height = 1080.dp)
     ) {
         AudioLibraryScreen(
             libraryViewModel = AudioLibraryViewModel(
@@ -32,8 +36,10 @@ fun main() = application {
     }
 }
 
-fun onExit(applicationScope: ApplicationScope, audioPlayerService: VlcAudioPlayerService) {
-    println("Exiting")
+fun onExit(
+    applicationScope: ApplicationScope,
+    audioPlayerService: VlcAudioPlayerService
+) {
     audioPlayerService.exit()
     applicationScope.exitApplication()
 }

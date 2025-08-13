@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlin.random.Random
 
 class PlaylistDataRepository {
-    // read/write-only
+    // read/write-only TODO replace with local or network data source
     val dataSource = MutableStateFlow<List<YmePlaylist>>(emptyList())
     // external read-only
     val latestPlaylistCollection: Flow<List<YmePlaylist>> = dataSource.asStateFlow()
@@ -59,27 +59,4 @@ class PlaylistDataRepository {
             YmePlaylist(6, "Playlist 6"),
         )
     }
-}
-
-data class YmePlaylist(
-    var id: Int = 0,
-    val name: String = "New playlist-" + Random.nextInt(1000),
-    val tracks: List<YmeTrack> = emptyList()
-)
-
-data class PlaylistEvent(
-    val playlist: YmePlaylist = YmePlaylist(),
-    val track: YmeTrack = YmeTrack(),
-    val type: PlaylistEventType = PlaylistEventType.DEFAULT,
-)
-
-enum class PlaylistEventType {
-    DEFAULT,
-    CREATE,
-    READ,
-    UPDATE,
-    DELETE,
-    ADD_TRACK,
-    REMOVE_TRACK,
-    EXPORT,
 }

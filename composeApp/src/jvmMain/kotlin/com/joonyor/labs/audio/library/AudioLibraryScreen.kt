@@ -119,11 +119,12 @@ fun AudioLibraryScreen(
                                 // track detail (col)
                                 TrackDetailScreen(
                                     modifier = Modifier
-                                    .weight(0.2f)
+                                        .weight(0.2f)
                                         .fillMaxHeight()
                                         .background(MaterialTheme.colorScheme.primaryContainer)
                                         .padding(10.dp),
                                     selectedTrack = audioPlayerViewModel.selectedTrack.value,
+                                    onTrackEvent = { libraryViewModel.onTrackEvent(it) },
                                 )
                             }
                         }

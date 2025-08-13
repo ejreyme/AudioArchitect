@@ -2,14 +2,22 @@ package com.joonyor.labs.audio.player
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.joonyor.labs.audio.loggerFor
 import com.joonyor.labs.audio.track.YmeTrack
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
-
+/**
+ * ViewModel responsible for managing audio playback functionality and state.
+ *
+ * @property audioPlayerService Service managing the underlying logic for audio playback.
+ */
 class AudioPlayerViewModel(private val audioPlayerService: AudioPlayerService) {
+    private val logger = loggerFor(javaClass)
     val scope = CoroutineScope(Dispatchers.IO)
     var isPlaying: MutableState<Boolean> = mutableStateOf(false)
     var currentTrackPlaying: MutableState<YmeTrack> = mutableStateOf(YmeTrack())
@@ -52,27 +60,28 @@ class AudioPlayerViewModel(private val audioPlayerService: AudioPlayerService) {
                 onQueueEvent(event.track)
             }
             else -> {
-                println("Unknown audio player event")
+                logger.debug("Unknown audio player event")
             }
         }
     }
 
     private fun onQueueEvent(track: YmeTrack) {
-        println("onQueueEvent: $track")
+        logger.debug("onQueueEvent: $track")
         scope.launch { trackQueue.send(track) }
     }
 
     private fun audioPlayerEventHandlers() {
         scope.launch {
             audioPlayerService.trackPosition.collect {
-                println("collecting trackPosition: $it")
+                delay(audioPlayerService.trackPositionDelay)
+                logger.debug("collecting trackPosition: $it")
                 trackPosition.value = it
             }
         }
 
         scope.launch {
             audioPlayerService.isPlaying.collect {
-                println("collecting isPlaying: $it")
+                logger.debug("collecting isPlaying: $it")
                 isPlaying.value = it
                 if (!it) {
                     playNextTrack()

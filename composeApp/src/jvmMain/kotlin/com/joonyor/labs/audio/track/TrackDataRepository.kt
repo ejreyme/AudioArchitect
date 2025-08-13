@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class TrackDataRepository {
-    // read/write-only
+    // read/write-only TODO replace with local or network data source
     val dataSource = MutableStateFlow<List<YmeTrack>>(emptyList())
     // external read-only
     val latestTrackCollection: Flow<List<YmeTrack>> = dataSource.asStateFlow()
@@ -23,10 +23,26 @@ class TrackDataRepository {
     }
 
     // UPDATE
-    fun updateTrack(track: YmeTrack) {
+    fun updateTrack(track: YmeTrack, tag: YmeTag) {
         readTrack(track.filePath)?.let {
+
+            val updatedTags = it.tags.toMutableSet()
+            if (tag.active) {
+                updatedTags.add(tag)
+            } else {
+                updatedTags.remove(tag)
+            }
+
+            val updatedTrack = YmeTrack(
+                filePath = it.filePath,
+                title = it.title,
+                artist = it.artist,
+                tags = updatedTags.toSet(),
+                duration = it.duration,
+            )
+
             dataSource.value = dataSource.value.toMutableList().apply {
-                set(indexOf(it), track)
+                set(indexOf(it), updatedTrack)
             }
         }
     }
@@ -42,22 +58,4 @@ class TrackDataRepository {
     fun search(query: String): List<YmeTrack> {
         return dataSource.value.filter { track -> track.title.contains(query, ignoreCase = true) }
     }
-}
-
-data class YmeTrack(
-    val filePath: String = "",
-    val title: String = "Unknown title",
-    val artist: String = "Unknown artist",
-    val durationDisplay: String = "00:00",
-    val tags: Set<YmeTag> = emptySet(),
-    val duration: Int = 0,
-) {
-    val isNew = filePath.isEmpty()
-    val isNotNew = !isNew
-}
-
-data class YmeTag(val name: String)
-
-enum class TrackEventType {
-    ADD_TAG, REMOVE_TAG, DEFAULT
 }

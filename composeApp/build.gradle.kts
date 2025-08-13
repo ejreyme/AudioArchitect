@@ -59,7 +59,7 @@ kotlin {
             implementation("org.jetbrains.exposed:exposed-jdbc:${exposedVersion}")
             implementation("uk.co.caprica:vlcj:4.11.0")
             implementation("net.jthink:jaudiotagger:3.0.1")
-            implementation("com.github.bjoernpetersen:m3u-parser:1.3.0")
+            implementation("com.github.bjoernpetersen:m3u-parser:1.4.0")
             implementation("com.iheartradio.m3u8:open-m3u8:0.2.4")
         }
     }
