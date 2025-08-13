@@ -24,6 +24,26 @@ import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import java.io.File
 
+/**
+ * Service class responsible for managing audio library operations, handling playlists and tracks.
+ * It interacts with the playlist and track repositories to perform tasks such as creation,
+ * retrieval, updating, deletion, and search of audio data. Additionally, it provides functionality
+ * for exporting playlists and initiating library processing tasks.
+ *
+ * This class leverages a reactive approach to track updates, ensuring that changes to playlists
+ * or tracks trigger appropriate updates and recompositions. It also uses coroutine scopes
+ * for background operations like exporting playlists and loading tracks from a specified path.
+ *
+ * Main functionalities include:
+ * - Creating, updating, and deleting playlists.
+ * - Updating tracks with associated metadata or tags.
+ * - Searching tracks based on a query.
+ * - Exporting playlists to a file in specified formats.
+ * - Loading and initializing the library from a given root path.
+ *
+ * The class exposes `Flow` objects for both playlist and track collections to support reactive UI updates
+ * based on the latest data repositories' states.
+ */
 class AudioLibraryService() {
     private val logger = loggerFor(javaClass)
     private var playlistDataRepository: PlaylistDataRepository = PlaylistDataRepository()

@@ -4,6 +4,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/**
+ * A repository class responsible for managing track data operations such as
+ * creating, reading, updating, deleting, and searching for tracks.
+ */
 class TrackDataRepository {
     // read/write-only TODO replace with local or network data source
     val dataSource = MutableStateFlow<List<YmeTrack>>(emptyList())

@@ -24,6 +24,19 @@ enum class NavEventType {
     PLAYLIST,
 }
 
+/**
+ * ViewModel for managing the state and logic of the audio library.
+ *
+ * This class interacts with the `AudioLibraryService` to handle playlists, tracks, and navigation between screens within the audio library.
+ * It provides functionalities to manage playlists, search tracks, and handle user navigation events.
+ *
+ * @property audioLibraryService Service for managing audio library data interactions.
+ * @property scope Coroutine scope for performing asynchronous tasks.
+ * @property selectedPlaylist The currently selected playlist in the library.
+ * @property trackCollection The current collection of tracks in the library.
+ * @property playlistCollection The current collection of playlists in the library.
+ * @property currentScreen The currently active navigation screen.
+ */
 class AudioLibraryViewModel(private val audioLibraryService: AudioLibraryService) {
     private val logger = loggerFor(javaClass)
     val scope = CoroutineScope(Dispatchers.IO)

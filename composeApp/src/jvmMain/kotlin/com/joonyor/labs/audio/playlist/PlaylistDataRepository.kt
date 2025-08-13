@@ -4,8 +4,11 @@ import com.joonyor.labs.audio.track.YmeTrack
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlin.random.Random
 
+/**
+ * Repository class responsible for managing playlist data operations such as creation, retrieval, updating, and deletion.
+ * It leverages a reactive data source to expose and manipulate playlist collections.
+ */
 class PlaylistDataRepository {
     // read/write-only TODO replace with local or network data source
     val dataSource = MutableStateFlow<List<YmePlaylist>>(emptyList())

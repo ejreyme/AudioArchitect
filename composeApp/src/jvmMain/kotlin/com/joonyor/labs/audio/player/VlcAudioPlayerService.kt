@@ -14,6 +14,17 @@ import uk.co.caprica.vlcj.player.component.AudioPlayerComponent
 import kotlin.system.exitProcess
 
 // https://www.capricasoftware.co.uk
+/**
+ * Service class for handling audio playback functionality using VLC media player.
+ * Implements the `AudioPlayerService` interface to provide a consistent API
+ * for controlling audio playback and tracking playback state.
+ *
+ * The class leverages VLC's `AudioPlayerComponent` to control media playback
+ * and implements coroutine-based asynchronous operations for handling events
+ * in the playback lifecycle.
+ *
+ * @constructor Creates a new instance of `VlcAudioPlayerService`.
+ */
 class VlcAudioPlayerService() : AudioPlayerService {
     private val logger = loggerFor(javaClass)
     private val vlcAudioPlayer = AudioPlayerComponent()

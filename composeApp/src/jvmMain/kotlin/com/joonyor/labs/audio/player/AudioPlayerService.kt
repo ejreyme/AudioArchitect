@@ -4,6 +4,9 @@ import com.joonyor.labs.audio.track.YmeTrack
 import kotlinx.coroutines.flow.Flow
 import java.util.concurrent.TimeUnit
 
+/**
+ * Represents a service interface for playing audio tracks and managing playback controls.
+ */
 interface AudioPlayerService {
     val trackPosition: Flow<Float>
     val isPlaying: Flow<Boolean>
