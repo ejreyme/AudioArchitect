@@ -1,8 +1,15 @@
 package com.joonyor.labs.audio.library
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Divider
+import androidx.compose.material.Icon
 import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,7 +27,6 @@ fun AudioLibraryScreen(
     audioPlayerViewModel: AudioPlayerViewModel
 ) {
     MaterialTheme {
-        var searchQuery by remember { mutableStateOf("") }
         Scaffold(
             topBar = {
                 TopAppBar {
@@ -35,6 +41,7 @@ fun AudioLibraryScreen(
                         modifier = Modifier
                             .weight(.6f)
                     ) {
+                        var searchQuery by remember { mutableStateOf("") }
                         TextField(
                             value = searchQuery,
                             onValueChange = {
@@ -67,51 +74,133 @@ fun AudioLibraryScreen(
                 }
             },
         ) {
+            // main content (row) [nav/playlist (col) | track list (col)| track detail (col) ]
             Row(modifier = Modifier.fillMaxSize().padding(top = 50.dp)) {
-                PlaylistScreen(
-                    modifier = Modifier.weight(0.2f)
+                // nav/playlist (col)
+                Column(
+                    modifier = Modifier
+                        .weight(0.2f)
                         .fillMaxHeight()
                         .background(MaterialTheme.colorScheme.primaryContainer)
-                        .padding(10.dp),
-                    playlistCollection = libraryViewModel.playlistCollection.value,
-                    onNavEvent = { libraryViewModel.onNavigationEvent(it) },
-                    onPlaylistEvent = { libraryViewModel.onPlaylistEvent(it) }
-                )
-                TrackListScreen(
-                    modifier = Modifier.weight(0.6f)
-                        .safeContentPadding()
-                        .fillMaxSize()
-                        .padding(top = 10.dp, start = 10.dp, end = 10.dp, bottom = 100.dp),
-                    trackCollection = libraryViewModel.trackCollection.value,
-                    playlistCollection = libraryViewModel.playlistCollection.value,
-                    selectedTrack = audioPlayerViewModel.selectedTrack,
-                    onAudioPlayerEvent = { audioPlayerViewModel.onAudioPlayerEvent(it) },
-                    onPlaylistEvent = { libraryViewModel.onPlaylistEvent(it) },
-                    isPlaying = audioPlayerViewModel.isPlaying.value,
-                    currentTrackPlaying = audioPlayerViewModel.currentTrackPlaying.value,
-                    selectedPlaylist = libraryViewModel.selectedPlaylist.value,
-                )
-                TrackDetailScreen(
-                    modifier = Modifier.weight(0.2f)
-                        .fillMaxHeight()
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                        .padding(10.dp),
-                    selectedTrack = audioPlayerViewModel.selectedTrack.value,
-                )
+                        .padding(10.dp)
+                ) {
+                    SideNavScreen(onNavEvent = { libraryViewModel.onNavigationEvent(it) })
+                    Divider()
+                    PlaylistScreen(
+                        playlistCollection = libraryViewModel.playlistCollection.value,
+                        onPlaylistEvent = { libraryViewModel.onPlaylistEvent(it) }
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(0.8f)
+                ) {
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        when (libraryViewModel.currentScreen.value) {
+                            NavEventType.HOME -> HomeScreen()
+                            NavEventType.EXPLORE -> ExploreScreen()
+                            NavEventType.LIBRARY, NavEventType.PLAYLIST -> {
+                                // track list (col)
+                                TrackListScreen(
+                                    modifier = Modifier
+                                    .weight(0.8f)
+                                        .safeContentPadding()
+                                        .fillMaxSize()
+                                        .padding(top = 10.dp, start = 10.dp, end = 10.dp, bottom = 100.dp),
+                                    trackCollection = libraryViewModel.trackCollection.value,
+                                    playlistCollection = libraryViewModel.playlistCollection.value,
+                                    selectedTrack = audioPlayerViewModel.selectedTrack,
+                                    onAudioPlayerEvent = { audioPlayerViewModel.onAudioPlayerEvent(it) },
+                                    onPlaylistEvent = { libraryViewModel.onPlaylistEvent(it) },
+                                    isPlaying = audioPlayerViewModel.isPlaying.value,
+                                    currentTrackPlaying = audioPlayerViewModel.currentTrackPlaying.value,
+                                    selectedPlaylist = libraryViewModel.selectedPlaylist.value,
+                                )
+                                // track detail (col)
+                                TrackDetailScreen(
+                                    modifier = Modifier
+                                    .weight(0.2f)
+                                        .fillMaxHeight()
+                                        .background(MaterialTheme.colorScheme.primaryContainer)
+                                        .padding(10.dp),
+                                    selectedTrack = audioPlayerViewModel.selectedTrack.value,
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun Sidebar(
-    content: @Composable RowScope.() -> Unit
+fun SideNavScreen(
+    onNavEvent: (NavEvent) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)
-            .background(MaterialTheme.colorScheme.primaryContainer),
-        content = content
-    )
+    Row(modifier = Modifier.fillMaxWidth()
+        .combinedClickable(
+            onClick = {
+                onNavEvent.invoke(
+                    NavEvent(
+                        type = NavEventType.HOME
+                    )
+                )
+            }
+        )
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Home,
+            contentDescription = "Home",
+        )
+        Text("Home")
+    }
+    Row(modifier = Modifier.fillMaxWidth()
+        .combinedClickable(
+            onClick = {
+                onNavEvent.invoke(
+                    NavEvent(
+                        type = NavEventType.EXPLORE
+                    )
+                )
+            }
+        )
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Explore,
+            contentDescription = "Explore",
+        )
+        Text("Explore")
+    }
+    Row(modifier = Modifier.fillMaxWidth()
+        .combinedClickable(
+            onClick = {
+                onNavEvent.invoke(
+                    NavEvent(
+                        type = NavEventType.LIBRARY
+                    )
+                )
+            }
+        )
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.LibraryMusic,
+            contentDescription = "Library",
+        )
+        Text("Library")
+    }
+}
+
+@Composable
+fun HomeScreen() {
+    Column{
+        Text("Home")
+    }
+}
+
+@Composable
+fun ExploreScreen() {
+    Column{
+        Text("Explore")
+    }
 }

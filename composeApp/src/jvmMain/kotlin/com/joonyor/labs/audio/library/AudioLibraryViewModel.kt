@@ -18,6 +18,7 @@ enum class NavEventType {
     HOME,
     EXPLORE,
     LIBRARY,
+    PLAYLIST,
 }
 
 class AudioLibraryViewModel(
@@ -27,6 +28,7 @@ class AudioLibraryViewModel(
     var selectedPlaylist: MutableState<YmePlaylist> = mutableStateOf(YmePlaylist(id = 0, name = "Library"))
     var trackCollection: MutableState<List<YmeTrack>> = mutableStateOf(emptyList())
     var playlistCollection: MutableState<List<YmePlaylist>> = mutableStateOf(emptyList())
+    var currentScreen: MutableState<NavEventType> = mutableStateOf(NavEventType.LIBRARY)
 
     init {
         refreshLibrary()
@@ -34,26 +36,23 @@ class AudioLibraryViewModel(
     
     fun onNavigationEvent(event: NavEvent) {
         when (event.type) {
-            NavEventType.EXPLORE -> {}
+            NavEventType.EXPLORE -> onNavExploreEvent()
             NavEventType.LIBRARY -> onNavLibraryEvent()
-            NavEventType.HOME -> {}
+            NavEventType.HOME -> onNavHomeEvent()
+            NavEventType.PLAYLIST -> onNavPlaylistEvent()
         }
     }
 
     fun onPlaylistEvent(event: PlaylistEvent) {
         when (event.type) {
             PlaylistEventType.CREATE -> onPlaylistCreateEvent(event)
-            PlaylistEventType.READ -> onPlaylistViewEvent(event)
+            PlaylistEventType.READ -> onPlaylistReadEvent(event)
             PlaylistEventType.ADD_TRACK -> onPlaylistAddTrackEvent(event)
             PlaylistEventType.DELETE -> onPlaylistDeleteEvent(event)
             else -> {
                 println("Unknown playlist event")
             }
         }
-    }
-
-    private fun onPlaylistDeleteEvent(event: PlaylistEvent) {
-        audioLibraryService.deletePlaylist(event.playlist)
     }
 
     fun onSearchQuery(query: String) {
@@ -65,11 +64,28 @@ class AudioLibraryViewModel(
             }
         }
     }
+
+    private fun onPlaylistDeleteEvent(event: PlaylistEvent) {
+        audioLibraryService.deletePlaylist(event.playlist)
+    }
     
     private fun onNavLibraryEvent() {
+        currentScreen.value = NavEventType.LIBRARY
         scope.launch {
             refreshTracks()
         }
+    }
+
+    private fun onNavPlaylistEvent() {
+        currentScreen.value = NavEventType.PLAYLIST
+    }
+
+    private fun onNavExploreEvent() {
+        currentScreen.value = NavEventType.EXPLORE
+    }
+
+    private fun onNavHomeEvent() {
+        currentScreen.value = NavEventType.HOME
     }
     
     private fun onPlaylistCreateEvent(event: PlaylistEvent) {
@@ -82,8 +98,9 @@ class AudioLibraryViewModel(
         audioLibraryService.updatePlaylist(event.playlist, event.track)
     }
 
-    private fun onPlaylistViewEvent(event: PlaylistEvent) {
+    private fun onPlaylistReadEvent(event: PlaylistEvent) {
         println("View playlist: ${event.playlist.name}")
+        currentScreen.value = NavEventType.PLAYLIST
         trackCollection.value = event.playlist.tracks
         selectedPlaylist.value = event.playlist
     }
