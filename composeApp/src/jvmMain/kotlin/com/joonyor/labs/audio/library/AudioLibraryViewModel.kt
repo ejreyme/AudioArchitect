@@ -31,7 +31,8 @@ data class AudioLibraryState(
     var activeScreen: MutableState<NavEventType> = mutableStateOf(NavEventType.LIBRARY)
 )
 
-class AudioLibraryViewModel(private val audioLibraryService: AudioLibraryService) {
+class AudioLibraryViewModel() {
+    private val audioLibraryService = AudioLibraryService()
     private val logger = loggerFor(javaClass)
     val scope = CoroutineScope(Dispatchers.IO)
     val libState = AudioLibraryState()
@@ -88,7 +89,7 @@ class AudioLibraryViewModel(private val audioLibraryService: AudioLibraryService
 
     private fun onPlaylistExportEvent(event: PlaylistEvent) {
         logger.debug("Export playlist: ${event.playlist.name}")
-        audioLibraryService.exportPlaylist(event.playlist)
+        audioLibraryService.exportPlaylist(event.playlist, event.exportType)
     }
 
     private fun onPlaylistDeleteEvent(event: PlaylistEvent) {

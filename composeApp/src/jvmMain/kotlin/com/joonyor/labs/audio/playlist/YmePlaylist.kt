@@ -13,6 +13,7 @@ data class PlaylistEvent(
     val playlist: YmePlaylist = YmePlaylist(),
     val track: YmeTrack = YmeTrack(),
     val type: PlaylistEventType = PlaylistEventType.DEFAULT,
+    val exportType: PlaylistExportType = PlaylistExportType.M3U,
 )
 
 enum class PlaylistEventType {
@@ -24,4 +25,10 @@ enum class PlaylistEventType {
     ADD_TRACK,
     REMOVE_TRACK,
     EXPORT,
+}
+
+enum class PlaylistExportType {
+    M3U,
+    TRAKTOR,
+    REKORDBOX,
 }

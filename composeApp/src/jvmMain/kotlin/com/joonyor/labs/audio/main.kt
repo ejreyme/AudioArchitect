@@ -18,7 +18,6 @@ fun <T> loggerFor(clazz: Class<T>): Logger = LoggerFactory.getLogger(clazz)
 
 fun main() = application {
     val audioPlayerService = VlcAudioPlayerService()
-    val audioLibraryService = AudioLibraryService()
 
     Window(
         onCloseRequest = { onExit(this, audioPlayerService) },
@@ -26,12 +25,8 @@ fun main() = application {
         state = rememberWindowState(width = 1440.dp, height = 1080.dp)
     ) {
         AudioLibraryScreen(
-            libVM = AudioLibraryViewModel(
-                audioLibraryService = audioLibraryService
-            ),
-            apVM = AudioPlayerViewModel(
-                audioPlayerService = audioPlayerService
-            )
+            libVM = AudioLibraryViewModel(),
+            apVM = AudioPlayerViewModel(audioPlayerService)
         )
     }
 }

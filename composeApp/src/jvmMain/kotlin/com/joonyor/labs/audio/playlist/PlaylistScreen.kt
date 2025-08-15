@@ -131,12 +131,37 @@ private fun playlistMenu(
 ): List<ContextMenuItem> {
     return listOf(
         ContextMenuItem(
-            label = "Export",
+            label = "Export > M3U",
             onClick = {
                 onPlaylistEvent.invoke(
                     PlaylistEvent(
                         playlist = playlist,
-                        type = PlaylistEventType.EXPORT
+                        type = PlaylistEventType.EXPORT,
+                        exportType = PlaylistExportType.M3U
+                    )
+                )
+            }
+        ),
+        ContextMenuItem(
+            label = "Export > Traktor(NML)",
+            onClick = {
+                onPlaylistEvent.invoke(
+                    PlaylistEvent(
+                        playlist = playlist,
+                        type = PlaylistEventType.EXPORT,
+                        exportType = PlaylistExportType.TRAKTOR
+                    )
+                )
+            }
+        ),
+        ContextMenuItem(
+            label = "Export > Rekordbox(XML)",
+            onClick = {
+                onPlaylistEvent.invoke(
+                    PlaylistEvent(
+                        playlist = playlist,
+                        type = PlaylistEventType.EXPORT,
+                        exportType = PlaylistExportType.REKORDBOX
                     )
                 )
             }

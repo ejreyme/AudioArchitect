@@ -28,7 +28,7 @@ import kotlin.system.exitProcess
 class VlcAudioPlayerService() : AudioPlayerService {
     private val logger = loggerFor(javaClass)
     private val vlcAudioPlayer = AudioPlayerComponent()
-    val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(Dispatchers.IO)
     val trackPositionChannel = Channel<Float>()
     val isPlayingChannel = Channel<Boolean>()
 

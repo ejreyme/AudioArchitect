@@ -1,18 +1,13 @@
 package com.joonyor.labs.audio.library
 
-import com.iheartradio.m3u8.Encoding
-import com.iheartradio.m3u8.Format
-import com.iheartradio.m3u8.PlaylistWriter
-import com.iheartradio.m3u8.data.MediaPlaylist
-import com.iheartradio.m3u8.data.Playlist
-import com.iheartradio.m3u8.data.TrackData
-import com.iheartradio.m3u8.data.TrackInfo
+import com.joonyor.labs.audio.playlist.PlaylistService
 import com.joonyor.labs.audio.config.AppConfiguration
-import com.joonyor.labs.audio.config.AppConfiguration.LIBRARY_PLAYLIST_EXPORT_PATH
 import com.joonyor.labs.audio.loggerFor
 import com.joonyor.labs.audio.playlist.PlaylistDataRepository
+import com.joonyor.labs.audio.playlist.PlaylistExportType
 import com.joonyor.labs.audio.playlist.YmePlaylist
 import com.joonyor.labs.audio.track.TrackDataRepository
+import com.joonyor.labs.audio.track.TrackService
 import com.joonyor.labs.audio.track.YmeTag
 import com.joonyor.labs.audio.track.YmeTrack
 import kotlinx.coroutines.CoroutineScope
@@ -44,17 +39,19 @@ import java.io.File
  * The class exposes `Flow` objects for both playlist and track collections to support reactive UI updates
  * based on the latest data repositories' states.
  */
-class AudioLibraryService() {
+class AudioLibraryService {
     private val logger = loggerFor(javaClass)
+    private val scope = CoroutineScope(Dispatchers.IO)
     private var playlistDataRepository: PlaylistDataRepository = PlaylistDataRepository()
     private var trackDataRepository: TrackDataRepository = TrackDataRepository()
+    private val playlistService = PlaylistService()
+    private val trackService = TrackService()
     // read-only
     val latestPlaylistCollection: Flow<List<YmePlaylist>> = playlistDataRepository.latestPlaylistCollection
     val latestTrackCollection: Flow<List<YmeTrack>> = trackDataRepository.latestTrackCollection
-    val scope = CoroutineScope(Dispatchers.IO)
 
     init {
-        initLibrary()
+        trackDataRepository.dataSource.value = trackService.loadTracksFromPath()
         triggerPlaylistCollectionUpdate()
         triggerTrackCollectionUpdate()
     }
@@ -82,45 +79,12 @@ class AudioLibraryService() {
         triggerPlaylistCollectionUpdate()
     }
 
-    fun searchTracks(query: String): List<YmeTrack> {
-        return trackDataRepository.search(query)
+    fun exportPlaylist(playlist: YmePlaylist, type: PlaylistExportType) {
+        playlistService.exportPlaylist(playlist, type)
     }
 
-    fun exportPlaylist(playlist: YmePlaylist) {
-        scope.launch {
-            logger.debug("exportPlaylist: $playlist")
-            try {
-                // build TrackData list
-                val tracks = playlist.tracks.stream()
-                    .filter { it.isNotNew }
-                    .map {
-                        TrackData.Builder()
-                            .withTrackInfo(TrackInfo(it.duration.toFloat(), it.title))
-                            .withUri(it.filePath)
-                            .build()
-                    }.toList()
-
-                // build media playlist
-                val mediaPlaylist = MediaPlaylist.Builder()
-                    .withTracks(tracks)
-                    .build()
-
-                // build playlist
-                val playlistExport = Playlist.Builder()
-                    .withCompatibilityVersion(1)
-                    .withMediaPlaylist(mediaPlaylist)
-                    .build()
-
-                // writer playlist to file
-                val outputFile = File("$LIBRARY_PLAYLIST_EXPORT_PATH/${playlist.name}.m3u")
-                val playlistWriter = PlaylistWriter(outputFile.outputStream(), Format.EXT_M3U, Encoding.UTF_8)
-                playlistWriter.write(playlistExport)
-            } catch (e: Exception) {
-                logger.debug("Error exporting playlist ${e.message}")
-            } finally {
-                logger.debug("exportPlaylist: done")
-            }
-        }
+    fun searchTracks(query: String): List<YmeTrack> {
+        return trackDataRepository.search(query)
     }
 
     // Emit updated list to trigger UI recomposition
@@ -142,68 +106,4 @@ class AudioLibraryService() {
             }
         }
     }
-
-    private fun initLibrary() {
-        trackDataRepository.dataSource.value = loadTracksFromPath()
-    }
-
-    private fun loadTracksFromPath(pathname: String = AppConfiguration.LIBRARY_ROOT_PATH): List<YmeTrack> {
-        try {
-            return File(pathname).walkTopDown()
-                .filter { it.isFile }
-                .filter { it.extension == "wav" || it.extension == "mp3" || it.extension == "m4a" }
-                .map { toTrack(it) }
-                .toList()
-        } catch (e: Exception) {
-            logger.debug("Error loading tracks from file path $pathname: ${e.message}")
-            return emptyList()
-        }
-    }
-
-    private fun toTrack(file: File): YmeTrack {
-        return try {
-            val audioMetadata = extractAudioMetadata(file)
-            audioMetadata?.let {
-                YmeTrack(
-                    filePath = file.absolutePath,
-                    title = it.title,
-                    artist = it.artist,
-                    duration = it.duration,
-                )
-            } ?: createFallbackTrack(file)
-        } catch (e: Exception) {
-            logger.debug("Error processing file ${file.name}: ${e.message}")
-            createFallbackTrack(file)
-        }
-    }
-
-    private fun extractAudioMetadata(file: File): AudioMetadata? {
-        return try {
-            val audioFile: AudioFile = AudioFileIO.read(file)
-            val tag = audioFile.tagOrCreateAndSetDefault
-            AudioMetadata(
-                title = tag.getFirst(FieldKey.TITLE).takeIf { it.isNotBlank() } ?: file.nameWithoutExtension,
-                artist = tag.getFirst(FieldKey.ARTIST).takeIf { it.isNotBlank() } ?: "Unknown Artist",
-                duration = audioFile.audioHeader.trackLength
-            )
-        } catch (e: Exception) {
-            logger.debug("WARNING: Could not read metadata for ${file.name}: ${e.message}")
-            null
-        }
-    }
-
-    private fun createFallbackTrack(file: File): YmeTrack {
-        return YmeTrack(
-            filePath = file.absolutePath,
-            title = file.nameWithoutExtension,
-            artist = "Unknown Artist",
-            duration = 0,
-        )
-    }
-
-    private data class AudioMetadata(
-        val title: String,
-        val artist: String,
-        val duration: Int
-    )
 }
