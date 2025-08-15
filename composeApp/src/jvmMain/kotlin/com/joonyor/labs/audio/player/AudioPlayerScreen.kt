@@ -10,26 +10,22 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import com.joonyor.labs.audio.playlist.YmePlaylist
 import com.joonyor.labs.audio.track.YmeTrack
 
 @Composable
 fun AudioPlayerScreen(
-    selectedTrack: YmeTrack = YmeTrack(),
-    currentTrackPlaying: YmeTrack = YmeTrack(),
-    isPlaying: Boolean = false,
+    playerState: AudioPlayerState,
     onAudioPlayerEvent: (AudioPlayerEvent) -> Unit,
-    trackPosition: MutableState<Float>,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(modifier = Modifier.weight(0.2f)) {
             Slider(
-                enabled = currentTrackPlaying.isNotNew,
-                value = trackPosition.value,
+                enabled = playerState.trackPlaying.value.isNotNew,
+                value = playerState.trackPosition.value,
                 onValueChange = {
-                    trackPosition.value = it
+                    playerState.trackPosition.value = it
                     onAudioPlayerEvent.invoke(
                         AudioPlayerEvent(
                             type = AudioPlayerEventType.TRACK_POSITION,
@@ -51,8 +47,8 @@ fun AudioPlayerScreen(
                     horizontalArrangement = Arrangement.Start
                 ) {
                     AudioPlayerControls(
-                        selectedTrack = selectedTrack,
-                        isPlaying = isPlaying,
+                        selectedTrack = playerState.activeTrack.value,
+                        isPlaying = playerState.isPlaying.value,
                         onAudioPlayerEvent = { onAudioPlayerEvent.invoke(it) }
                     )
                 }
@@ -63,8 +59,8 @@ fun AudioPlayerScreen(
                     horizontalArrangement = Arrangement.Start
                 ) {
                     Column {
-                        Text(text = currentTrackPlaying.title)
-                        Text(text = currentTrackPlaying.artist)
+                        Text(text = playerState.trackPlaying.value.title)
+                        Text(text = playerState.trackPlaying.value.artist)
                     }
                 }
             }
@@ -158,17 +154,4 @@ fun AudioPlayerControls(
             )
         }
     }
-}
-
-data class AudioPlayerEvent(
-    val playlist: YmePlaylist = YmePlaylist(),
-    val track: YmeTrack = YmeTrack(),
-    val type: AudioPlayerEventType = AudioPlayerEventType.DEFAULT,
-    val volume: Float = 0.0f,
-    val trackPosition: Float = 0.0f,
-    val isRepeat: Boolean = false,
-)
-
-enum class AudioPlayerEventType {
-    PLAY, PAUSE, SKIP_FORWARD, SKIP_BACK, STOP, QUEUE, VOLUME, TRACK_POSITION, REPEAT, DEFAULT, ADD_TO_PLAYLIST, REMOVE_FROM_PLAYLIST
 }

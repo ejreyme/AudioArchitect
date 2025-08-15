@@ -3,12 +3,20 @@ package com.joonyor.labs.audio.player
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.joonyor.labs.audio.loggerFor
+import com.joonyor.labs.audio.playlist.YmePlaylist
 import com.joonyor.labs.audio.track.YmeTrack
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+data class AudioPlayerState(
+    val isPlaying: MutableState<Boolean> = mutableStateOf(false),
+    val trackPlaying: MutableState<YmeTrack> = mutableStateOf(YmeTrack()),
+    val activeTrack: MutableState<YmeTrack> = mutableStateOf(YmeTrack()),
+    val trackPosition: MutableState<Float> = mutableStateOf(0.0f)
+)
 
 /**
  * ViewModel responsible for managing audio playback functionality and state.
@@ -18,10 +26,7 @@ import kotlinx.coroutines.launch
 class AudioPlayerViewModel(private val audioPlayerService: AudioPlayerService) {
     private val logger = loggerFor(javaClass)
     val scope = CoroutineScope(Dispatchers.IO)
-    var isPlaying: MutableState<Boolean> = mutableStateOf(false)
-    var currentTrackPlaying: MutableState<YmeTrack> = mutableStateOf(YmeTrack())
-    var selectedTrack: MutableState<YmeTrack> = mutableStateOf(YmeTrack())
-    var trackPosition: MutableState<Float> = mutableStateOf(0.0f)
+    val playerState = AudioPlayerState()
     val trackQueue = Channel<YmeTrack>()
 
     init {
@@ -65,7 +70,7 @@ class AudioPlayerViewModel(private val audioPlayerService: AudioPlayerService) {
     }
 
     private fun onQueueEvent(track: YmeTrack) {
-        logger.debug("onQueueEvent: $track")
+        logger.debug("onQueueEvent: {}", track)
         scope.launch { trackQueue.send(track) }
     }
 
@@ -74,14 +79,14 @@ class AudioPlayerViewModel(private val audioPlayerService: AudioPlayerService) {
             audioPlayerService.trackPosition.collect {
                 delay(audioPlayerService.trackPositionDelay)
                 logger.debug("collecting trackPosition: $it")
-                trackPosition.value = it
+                playerState.trackPosition.value = it
             }
         }
 
         scope.launch {
             audioPlayerService.isPlaying.collect {
                 logger.debug("collecting isPlaying: $it")
-                isPlaying.value = it
+                playerState.isPlaying.value = it
                 if (!it) {
                     playNextTrack()
                 }
@@ -106,24 +111,49 @@ class AudioPlayerViewModel(private val audioPlayerService: AudioPlayerService) {
 
     private fun onPlayClick(track: YmeTrack) {
         audioPlayerService.play(track.filePath)
-        selectedTrack.value = track
-        currentTrackPlaying.value = track
-        isPlaying.value = true
+        playerState.activeTrack.value = track
+        playerState.trackPlaying.value = track
+        playerState.isPlaying.value = true
     }
 
     private fun onStopClick() {
         audioPlayerService.stop()
-        selectedTrack.value = YmeTrack()
-        currentTrackPlaying.value = YmeTrack()
-        isPlaying.value = false
+        playerState.activeTrack.value = YmeTrack()
+        playerState.trackPlaying.value = YmeTrack()
+        playerState.isPlaying.value = false
     }
 
     private fun onPauseClick() {
         audioPlayerService.pause()
-        isPlaying.value = false
+        playerState.isPlaying.value = false
     }
 
     private fun onVolumeChange(value: Float) {
         audioPlayerService.volumeChange(value)
     }
+}
+
+
+data class AudioPlayerEvent(
+    val playlist: YmePlaylist = YmePlaylist(),
+    val track: YmeTrack = YmeTrack(),
+    val type: AudioPlayerEventType = AudioPlayerEventType.DEFAULT,
+    val volume: Float = 0.0f,
+    val trackPosition: Float = 0.0f,
+    val isRepeat: Boolean = false,
+)
+
+enum class AudioPlayerEventType {
+    DEFAULT,
+    PLAY,
+    STOP,
+    PAUSE,
+    SKIP_FORWARD,
+    SKIP_BACK,
+    QUEUE,
+    VOLUME,
+    TRACK_POSITION,
+    REPEAT,
+    ADD_TO_PLAYLIST,
+    REMOVE_FROM_PLAYLIST
 }

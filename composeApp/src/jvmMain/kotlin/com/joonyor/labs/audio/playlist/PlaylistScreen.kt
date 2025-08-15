@@ -26,7 +26,7 @@ import kotlin.random.Random
 @Composable
 fun PlaylistScreen(
     modifier: Modifier = Modifier,
-    playlistCollection: List<YmePlaylist>,
+    playlists: List<YmePlaylist>,
     onPlaylistEvent: (PlaylistEvent) -> Unit,
 ) {
     var showNewPlaylistForm by remember { mutableStateOf(false) }
@@ -79,8 +79,8 @@ fun PlaylistScreen(
         }
         Row {
             LazyColumn {
-                items(playlistCollection.size) { index ->
-                    val playlist = playlistCollection.getOrNull(index) ?: YmePlaylist()
+                items(playlists.size) { index ->
+                    val playlist = playlists.getOrNull(index) ?: YmePlaylist()
                     ContextMenuDataProvider(
                         items = {
                             playlistMenu(playlist = playlist, onPlaylistEvent = onPlaylistEvent)

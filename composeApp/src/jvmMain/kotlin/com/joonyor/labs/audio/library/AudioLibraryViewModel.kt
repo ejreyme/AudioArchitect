@@ -24,26 +24,17 @@ enum class NavEventType {
     PLAYLIST,
 }
 
-/**
- * ViewModel for managing the state and logic of the audio library.
- *
- * This class interacts with the `AudioLibraryService` to handle playlists, tracks, and navigation between screens within the audio library.
- * It provides functionalities to manage playlists, search tracks, and handle user navigation events.
- *
- * @property audioLibraryService Service for managing audio library data interactions.
- * @property scope Coroutine scope for performing asynchronous tasks.
- * @property selectedPlaylist The currently selected playlist in the library.
- * @property trackCollection The current collection of tracks in the library.
- * @property playlistCollection The current collection of playlists in the library.
- * @property currentScreen The currently active navigation screen.
- */
+data class AudioLibraryState(
+    var activePlaylist: MutableState<YmePlaylist> = mutableStateOf(YmePlaylist(id = 0, name = "Library")),
+    var tracks: MutableState<List<YmeTrack>> = mutableStateOf(emptyList()),
+    var playlists: MutableState<List<YmePlaylist>> = mutableStateOf(emptyList()),
+    var activeScreen: MutableState<NavEventType> = mutableStateOf(NavEventType.LIBRARY)
+)
+
 class AudioLibraryViewModel(private val audioLibraryService: AudioLibraryService) {
     private val logger = loggerFor(javaClass)
     val scope = CoroutineScope(Dispatchers.IO)
-    var selectedPlaylist: MutableState<YmePlaylist> = mutableStateOf(YmePlaylist(id = 0, name = "Library"))
-    var trackCollection: MutableState<List<YmeTrack>> = mutableStateOf(emptyList())
-    var playlistCollection: MutableState<List<YmePlaylist>> = mutableStateOf(emptyList())
-    var currentScreen: MutableState<NavEventType> = mutableStateOf(NavEventType.LIBRARY)
+    val libState = AudioLibraryState()
 
     init {
         refreshLibrary()
@@ -90,7 +81,7 @@ class AudioLibraryViewModel(private val audioLibraryService: AudioLibraryService
             if (query.isEmpty()) {
                 refreshTracks()
             } else {
-                trackCollection.value = audioLibraryService.searchTracks(query)
+                libState.tracks.value = audioLibraryService.searchTracks(query)
             }
         }
     }
@@ -105,22 +96,22 @@ class AudioLibraryViewModel(private val audioLibraryService: AudioLibraryService
     }
     
     private fun onNavLibraryEvent() {
-        currentScreen.value = NavEventType.LIBRARY
+        libState.activeScreen.value = NavEventType.LIBRARY
         scope.launch {
             refreshTracks()
         }
     }
 
     private fun onNavPlaylistEvent() {
-        currentScreen.value = NavEventType.PLAYLIST
+        libState.activeScreen.value = NavEventType.PLAYLIST
     }
 
     private fun onNavExploreEvent() {
-        currentScreen.value = NavEventType.EXPLORE
+        libState.activeScreen.value = NavEventType.EXPLORE
     }
 
     private fun onNavHomeEvent() {
-        currentScreen.value = NavEventType.HOME
+        libState.activeScreen.value = NavEventType.HOME
     }
     
     private fun onPlaylistCreateEvent(event: PlaylistEvent) {
@@ -135,9 +126,9 @@ class AudioLibraryViewModel(private val audioLibraryService: AudioLibraryService
 
     private fun onPlaylistReadEvent(event: PlaylistEvent) {
         logger.debug("View playlist: ${event.playlist.name}")
-        currentScreen.value = NavEventType.PLAYLIST
-        trackCollection.value = event.playlist.tracks
-        selectedPlaylist.value = event.playlist
+        libState.activeScreen.value = NavEventType.PLAYLIST
+        libState.tracks.value = event.playlist.tracks
+        libState.activePlaylist.value = event.playlist
     }
     
     private fun refreshLibrary() {
@@ -153,14 +144,14 @@ class AudioLibraryViewModel(private val audioLibraryService: AudioLibraryService
         logger.debug("refreshPlaylists")
         audioLibraryService.latestPlaylistCollection.collect {
             logger.debug("refreshPlaylists: ${it.size}")
-            playlistCollection.value = it
+            libState.playlists.value = it
         }
     }
 
     private suspend fun refreshTracks() {
         audioLibraryService.latestTrackCollection.collect {
             logger.debug("refreshTracks: ${it.size}")
-            trackCollection.value = it
+            libState.tracks.value = it
         }
     }
     // TODO add scroll pagination

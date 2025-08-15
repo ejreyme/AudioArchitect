@@ -23,8 +23,8 @@ import com.joonyor.labs.audio.track.TrackListScreen
 
 @Composable
 fun AudioLibraryScreen(
-    libraryViewModel: AudioLibraryViewModel,
-    audioPlayerViewModel: AudioPlayerViewModel
+    libVM: AudioLibraryViewModel,
+    apVM: AudioPlayerViewModel
 ) {
     MaterialTheme {
         Scaffold(
@@ -46,7 +46,7 @@ fun AudioLibraryScreen(
                             value = searchQuery,
                             onValueChange = {
                                 searchQuery = it
-                                libraryViewModel.onSearchQuery(it)
+                                libVM.onSearchQuery(it)
                             },
                             label = { Text("Search Tracks") },
                             modifier = Modifier.fillMaxWidth()
@@ -65,11 +65,8 @@ fun AudioLibraryScreen(
             bottomBar = {
                 BottomAppBar {
                     AudioPlayerScreen(
-                        selectedTrack = audioPlayerViewModel.selectedTrack.value,
-                        currentTrackPlaying = audioPlayerViewModel.currentTrackPlaying.value,
-                        isPlaying = audioPlayerViewModel.isPlaying.value,
-                        trackPosition = audioPlayerViewModel.trackPosition,
-                        onAudioPlayerEvent = { audioPlayerViewModel.onAudioPlayerEvent(it) },
+                        playerState = apVM.playerState,
+                        onAudioPlayerEvent = { apVM.onAudioPlayerEvent(it) },
                     )
                 }
             },
@@ -84,11 +81,11 @@ fun AudioLibraryScreen(
                         .background(MaterialTheme.colorScheme.primaryContainer)
                         .padding(10.dp)
                 ) {
-                    SideNavScreen(onNavEvent = { libraryViewModel.onNavigationEvent(it) })
+                    SideNavScreen(onNavEvent = { libVM.onNavigationEvent(it) })
                     Divider()
                     PlaylistScreen(
-                        playlistCollection = libraryViewModel.playlistCollection.value,
-                        onPlaylistEvent = { libraryViewModel.onPlaylistEvent(it) }
+                        playlists = libVM.libState.playlists.value,
+                        onPlaylistEvent = { libVM.onPlaylistEvent(it) }
                     )
                 }
                 Column(
@@ -96,7 +93,7 @@ fun AudioLibraryScreen(
                         .weight(0.8f)
                 ) {
                     Row(modifier = Modifier.fillMaxSize()) {
-                        when (libraryViewModel.currentScreen.value) {
+                        when (libVM.libState.activeScreen.value) {
                             NavEventType.HOME -> HomeScreen()
                             NavEventType.EXPLORE -> ExploreScreen()
                             NavEventType.LIBRARY, NavEventType.PLAYLIST -> {
@@ -107,14 +104,14 @@ fun AudioLibraryScreen(
                                         .safeContentPadding()
                                         .fillMaxSize()
                                         .padding(top = 10.dp, start = 10.dp, end = 10.dp, bottom = 100.dp),
-                                    trackCollection = libraryViewModel.trackCollection.value,
-                                    playlistCollection = libraryViewModel.playlistCollection.value,
-                                    selectedTrack = audioPlayerViewModel.selectedTrack,
-                                    onAudioPlayerEvent = { audioPlayerViewModel.onAudioPlayerEvent(it) },
-                                    onPlaylistEvent = { libraryViewModel.onPlaylistEvent(it) },
-                                    isPlaying = audioPlayerViewModel.isPlaying.value,
-                                    currentTrackPlaying = audioPlayerViewModel.currentTrackPlaying.value,
-                                    selectedPlaylist = libraryViewModel.selectedPlaylist.value,
+                                    selectedTrack = apVM.playerState.activeTrack,
+                                    isPlaying = apVM.playerState.isPlaying.value,
+                                    trackPlaying = apVM.playerState.trackPlaying.value,
+                                    tracks = libVM.libState.tracks.value,
+                                    playlists = libVM.libState.playlists.value,
+                                    activePlaylist = libVM.libState.activePlaylist.value,
+                                    onPlaylistEvent = { libVM.onPlaylistEvent(it) },
+                                    onAudioPlayerEvent = { apVM.onAudioPlayerEvent(it) },
                                 )
                                 // track detail (col)
                                 TrackDetailScreen(
@@ -123,8 +120,8 @@ fun AudioLibraryScreen(
                                         .fillMaxHeight()
                                         .background(MaterialTheme.colorScheme.primaryContainer)
                                         .padding(10.dp),
-                                    selectedTrack = audioPlayerViewModel.selectedTrack.value,
-                                    onTrackEvent = { libraryViewModel.onTrackEvent(it) },
+                                    selectedTrack = apVM.playerState.activeTrack.value,
+                                    onTrackEvent = { libVM.onTrackEvent(it) },
                                 )
                             }
                         }

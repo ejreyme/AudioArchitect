@@ -26,10 +26,10 @@ fun main() = application {
         state = rememberWindowState(width = 1440.dp, height = 1080.dp)
     ) {
         AudioLibraryScreen(
-            libraryViewModel = AudioLibraryViewModel(
+            libVM = AudioLibraryViewModel(
                 audioLibraryService = audioLibraryService
             ),
-            audioPlayerViewModel = AudioPlayerViewModel(
+            apVM = AudioPlayerViewModel(
                 audioPlayerService = audioPlayerService
             )
         )

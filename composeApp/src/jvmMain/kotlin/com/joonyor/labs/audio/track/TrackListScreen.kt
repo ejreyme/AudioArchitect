@@ -29,10 +29,10 @@ fun TrackListScreen(
     modifier: Modifier = Modifier,
     isPlaying: Boolean = false,
     selectedTrack: MutableState<YmeTrack>,
-    selectedPlaylist: YmePlaylist,
-    currentTrackPlaying: YmeTrack,
-    trackCollection: List<YmeTrack> = emptyList(),
-    playlistCollection: List<YmePlaylist> = emptyList(),
+    activePlaylist: YmePlaylist,
+    trackPlaying: YmeTrack,
+    tracks: List<YmeTrack> = emptyList(),
+    playlists: List<YmePlaylist> = emptyList(),
     onAudioPlayerEvent: (AudioPlayerEvent) -> Unit,
     onPlaylistEvent: (PlaylistEvent) -> Unit,
 ) {
@@ -41,21 +41,21 @@ fun TrackListScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row {
-            if (selectedPlaylist.name.isEmpty()) {
+            if (activePlaylist.name.isEmpty()) {
                 Text("Library")
             } else {
-                Text(selectedPlaylist.name)
+                Text(activePlaylist.name)
             }
         }
         Divider()
         LazyColumn {
-            items(trackCollection.size) { trackIndex ->
-                val track = trackCollection.getOrNull(trackIndex) ?: YmeTrack()
+            items(tracks.size) { trackIndex ->
+                val track = tracks.getOrNull(trackIndex) ?: YmeTrack()
                 ContextMenuDataProvider(
                     items = {
                         trackListMenu(
                             track = track,
-                            playListCollection = playlistCollection,
+                            playListCollection = playlists,
                             onAudioPlayerEvent = onAudioPlayerEvent,
                             onPlaylistEvent = onPlaylistEvent
                         )
@@ -66,7 +66,7 @@ fun TrackListScreen(
                             modifier = Modifier.fillMaxWidth(),
                             trackRow = track,
                             selectedTrack = selectedTrack,
-                            currentTrackPlaying = currentTrackPlaying,
+                            currentTrackPlaying = trackPlaying,
                             onAudioPlayerEvent = onAudioPlayerEvent,
                             isPlaying = isPlaying,
                         )
