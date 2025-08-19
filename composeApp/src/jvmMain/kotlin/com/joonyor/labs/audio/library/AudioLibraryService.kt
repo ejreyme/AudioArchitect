@@ -1,13 +1,13 @@
 package com.joonyor.labs.audio.library
 
-import com.joonyor.labs.audio.playlist.PlaylistService
 import com.joonyor.labs.audio.config.AppConfiguration
+import com.joonyor.labs.audio.config.AppConfiguration.LIBRARY_PLAYLIST_EXPORT_PATH
 import com.joonyor.labs.audio.loggerFor
 import com.joonyor.labs.audio.playlist.PlaylistDataRepository
 import com.joonyor.labs.audio.playlist.PlaylistExportType
+import com.joonyor.labs.audio.playlist.PlaylistExporter
 import com.joonyor.labs.audio.playlist.YmePlaylist
 import com.joonyor.labs.audio.track.TrackDataRepository
-import com.joonyor.labs.audio.track.TrackService
 import com.joonyor.labs.audio.track.YmeTag
 import com.joonyor.labs.audio.track.YmeTrack
 import kotlinx.coroutines.CoroutineScope
@@ -44,14 +44,12 @@ class AudioLibraryService {
     private val scope = CoroutineScope(Dispatchers.IO)
     private var playlistDataRepository: PlaylistDataRepository = PlaylistDataRepository()
     private var trackDataRepository: TrackDataRepository = TrackDataRepository()
-    private val playlistService = PlaylistService()
-    private val trackService = TrackService()
     // read-only
     val latestPlaylistCollection: Flow<List<YmePlaylist>> = playlistDataRepository.latestPlaylistCollection
     val latestTrackCollection: Flow<List<YmeTrack>> = trackDataRepository.latestTrackCollection
 
     init {
-        trackDataRepository.dataSource.value = trackService.loadTracksFromPath()
+        trackDataRepository.dataSource.value = loadTracksFromPath()
         triggerPlaylistCollectionUpdate()
         triggerTrackCollectionUpdate()
     }
@@ -79,8 +77,26 @@ class AudioLibraryService {
         triggerPlaylistCollectionUpdate()
     }
 
-    fun exportPlaylist(playlist: YmePlaylist, type: PlaylistExportType) {
-        playlistService.exportPlaylist(playlist, type)
+    fun exportPlaylist(playlist: YmePlaylist, type: PlaylistExportType =  PlaylistExportType.M3U) {
+        scope.launch {
+            logger.debug("exportPlaylist: {}", playlist.name)
+            when (type) {
+                PlaylistExportType.M3U -> {
+                    PlaylistExporter.exportPlaylistAsM3u(playlist)
+                }
+                PlaylistExportType.TRAKTOR -> {
+                    PlaylistExporter.exportTraktorNML(
+                        playlistName = playlist.name,
+                        tracks = playlist.tracks.toMutableList(),
+                        outputPath = "$LIBRARY_PLAYLIST_EXPORT_PATH/${playlist.name}.nml")
+                }
+                PlaylistExportType.REKORDBOX -> {
+                    PlaylistExporter.exportRekordboxXML(
+                        tracks = playlist.tracks.toMutableList(),
+                        outputPath = "$LIBRARY_PLAYLIST_EXPORT_PATH/${playlist.name}.xml")
+                }
+            }
+        }
     }
 
     fun searchTracks(query: String): List<YmeTrack> {
@@ -106,4 +122,64 @@ class AudioLibraryService {
             }
         }
     }
+
+    private fun loadTracksFromPath(pathname: String = AppConfiguration.LIBRARY_ROOT_PATH): List<YmeTrack> {
+        try {
+            return File(pathname).walkTopDown()
+                .filter { it.isFile }
+                .filter { it.extension == "wav" || it.extension == "mp3" || it.extension == "m4a" }
+                .map { toTrack(it) }
+                .toList()
+        } catch (e: Exception) {
+            logger.debug("Error loading tracks from file path $pathname: ${e.message}")
+            return emptyList()
+        }
+    }
+
+    private fun toTrack(file: File): YmeTrack {
+        return try {
+            val audioMetadata = extractAudioMetadata(file)
+            audioMetadata?.let {
+                YmeTrack(
+                    filePath = file.absolutePath,
+                    title = it.title,
+                    artist = it.artist,
+                    duration = it.duration,
+                )
+            } ?: createFallbackTrack(file)
+        } catch (e: Exception) {
+            logger.debug("Error processing file ${file.name}: ${e.message}")
+            createFallbackTrack(file)
+        }
+    }
+
+    private fun extractAudioMetadata(file: File): AudioMetadata? {
+        return try {
+            val audioFile: AudioFile = AudioFileIO.read(file)
+            val tag = audioFile.tagOrCreateAndSetDefault
+            AudioMetadata(
+                title = tag.getFirst(FieldKey.TITLE).takeIf { it.isNotBlank() } ?: file.nameWithoutExtension,
+                artist = tag.getFirst(FieldKey.ARTIST).takeIf { it.isNotBlank() } ?: "Unknown Artist",
+                duration = audioFile.audioHeader.trackLength
+            )
+        } catch (e: Exception) {
+            logger.debug("WARNING: Could not read metadata for ${file.name}: ${e.message}")
+            null
+        }
+    }
+
+    private fun createFallbackTrack(file: File): YmeTrack {
+        return YmeTrack(
+            filePath = file.absolutePath,
+            title = file.nameWithoutExtension,
+            artist = "Unknown Artist",
+            duration = 0,
+        )
+    }
+
+    private data class AudioMetadata(
+        val title: String,
+        val artist: String,
+        val duration: Int
+    )
 }
