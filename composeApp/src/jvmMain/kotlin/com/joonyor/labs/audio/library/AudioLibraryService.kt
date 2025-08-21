@@ -1,7 +1,6 @@
 package com.joonyor.labs.audio.library
 
 import com.joonyor.labs.audio.config.AppConfiguration
-import com.joonyor.labs.audio.config.AppConfiguration.LIBRARY_PLAYLIST_EXPORT_PATH
 import com.joonyor.labs.audio.loggerFor
 import com.joonyor.labs.audio.playlist.PlaylistDataRepository
 import com.joonyor.labs.audio.playlist.PlaylistExportType
@@ -42,6 +41,7 @@ import java.io.File
 class AudioLibraryService {
     private val logger = loggerFor(javaClass)
     private val scope = CoroutineScope(Dispatchers.IO)
+    private val playlistExporter = PlaylistExporter()
     private var playlistDataRepository: PlaylistDataRepository = PlaylistDataRepository()
     private var trackDataRepository: TrackDataRepository = TrackDataRepository()
     // read-only
@@ -80,24 +80,13 @@ class AudioLibraryService {
         triggerPlaylistCollectionUpdate()
     }
 
-    fun exportPlaylist(playlist: YmePlaylist, type: PlaylistExportType =  PlaylistExportType.M3U) {
+    fun exportPlaylist(playlist: YmePlaylist, type: PlaylistExportType) {
         scope.launch {
             logger.debug("exportPlaylist: {}", playlist.name)
             when (type) {
-                PlaylistExportType.M3U -> {
-                    PlaylistExporter.exportPlaylistAsM3u(playlist)
-                }
-                PlaylistExportType.TRAKTOR -> {
-                    PlaylistExporter.exportTraktorNML(
-                        playlistName = playlist.name,
-                        tracks = playlist.tracks.toMutableList(),
-                        outputPath = "$LIBRARY_PLAYLIST_EXPORT_PATH/${playlist.name}.nml")
-                }
-                PlaylistExportType.REKORDBOX -> {
-                    PlaylistExporter.exportRekordboxXML(
-                        tracks = playlist.tracks.toMutableList(),
-                        outputPath = "$LIBRARY_PLAYLIST_EXPORT_PATH/${playlist.name}.xml")
-                }
+                PlaylistExportType.M3U -> playlistExporter.asM3u(playlist)
+                PlaylistExportType.TRAKTOR -> playlistExporter.asNML(playlist)
+                PlaylistExportType.REKORDBOX -> playlistExporter.asXML(playlist)
             }
         }
     }

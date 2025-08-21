@@ -40,6 +40,25 @@ class AudioLibraryViewModel() {
     init {
         refreshLibrary()
     }
+
+
+    fun onSearchQuery(query: String) {
+        scope.launch {
+            if (query.isEmpty()) {
+                when (libState.activeScreen.value) {
+                    NavEventType.LIBRARY -> refreshTracks()
+                    NavEventType.PLAYLIST -> {
+                        libState.tracks.value = libState.activePlaylist.value.tracks
+                    }
+                    else -> {
+                        refreshTracks()
+                    }
+                }
+            } else {
+                libState.tracks.value = audioLibraryService.searchTracks(query)
+            }
+        }
+    }
     
     fun onNavigationEvent(event: NavEvent) {
         when (event.type) {
@@ -75,16 +94,6 @@ class AudioLibraryViewModel() {
     private fun onTrackAddTagEvent(event: TrackEvent) {
         logger.debug("Add tag to track: ${event.track.title}")
         audioLibraryService.updateTrackTags(event.track, event.tag)
-    }
-
-    fun onSearchQuery(query: String) {
-        scope.launch {
-            if (query.isEmpty()) {
-                refreshTracks()
-            } else {
-                libState.tracks.value = audioLibraryService.searchTracks(query)
-            }
-        }
     }
 
     private fun onPlaylistExportEvent(event: PlaylistEvent) {

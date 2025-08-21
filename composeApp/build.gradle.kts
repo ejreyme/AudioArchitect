@@ -62,6 +62,12 @@ kotlin {
             implementation("com.github.bjoernpetersen:m3u-parser:1.4.0")
             implementation("com.iheartradio.m3u8:open-m3u8:0.2.4")
         }
+        jvmTest.dependencies {
+            implementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
+            // Use the latest stable version
+            runtimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0")
+            // Use the latest stable version
+        }
     }
 }
 
@@ -76,4 +82,9 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+}
+
+// Add this configuration for JUnit 5
+tasks.withType<Test> {
+    useJUnitPlatform()
 }

@@ -9,7 +9,6 @@ import com.iheartradio.m3u8.data.TrackData
 import com.iheartradio.m3u8.data.TrackInfo
 import com.joonyor.labs.audio.config.AppConfiguration.LIBRARY_PLAYLIST_EXPORT_PATH
 import com.joonyor.labs.audio.loggerFor
-import com.joonyor.labs.audio.track.YmeTrack
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -17,11 +16,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import java.io.File;
-import java.text.SimpleDateFormat
-import java.util.Base64
-import java.util.Date
-import java.util.Random
-import java.util.UUID
+import java.nio.file.Path
 
 data class CuePoint(
     var name: String?, // in milliseconds
@@ -30,10 +25,10 @@ data class CuePoint(
 )
 
 // TODO not done
-object PlaylistExporter {
+class PlaylistExporter(val outputDir: String = LIBRARY_PLAYLIST_EXPORT_PATH) {
     private val logger = loggerFor(javaClass)
 
-    fun exportPlaylistAsM3u(playlist: YmePlaylist) {
+    fun asM3u(playlist: YmePlaylist): String {
         try {
             // build TrackData list
             val tracks = playlist.tracks.stream()
@@ -57,18 +52,23 @@ object PlaylistExporter {
                 .build()
 
             // writer playlist to file
-            val outputFile = File("$LIBRARY_PLAYLIST_EXPORT_PATH/${playlist.name}.m3u")
+            val outputFile = File(buildExportFile(outputDir, playlist.name, "m3u"))
             val playlistWriter = PlaylistWriter(outputFile.outputStream(), Format.EXT_M3U, Encoding.UTF_8)
             playlistWriter.write(playlistExport)
+            return outputFile.absolutePath
         } catch (e: Exception) {
             logger.debug("Error exporting playlist ${e.message}")
         } finally {
             logger.debug("exportPlaylist: done")
         }
+        return ""
     }
 
-    @Throws(Exception::class)
-    fun exportTraktorNML(playlistName: String, tracks: MutableList<YmeTrack>, outputPath: String) {
+    fun asNML(playlist: YmePlaylist) {
+        val playlistName = playlist.name
+        val tracks = playlist.tracks.toMutableList()
+        val outputPath = buildExportFile(outputDir, playlistName, "nml")
+
         val doc: Document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
         val nml: Element = doc.createElement("NML")
         nml.setAttribute("VERSION", "19")
@@ -128,12 +128,15 @@ object PlaylistExporter {
         playlists.appendChild(node)
         nml.appendChild(playlists)
 
+
         TransformerFactory.newInstance().newTransformer()
             .transform(DOMSource(doc), StreamResult(File(outputPath)))
     }
 
-    @Throws(Exception::class)
-    fun exportRekordboxXML(tracks: MutableList<YmeTrack>, outputPath: String) {
+    fun asXML(playlist: YmePlaylist) {
+        val tracks = playlist.tracks.toMutableList()
+        val outputPath = "$LIBRARY_PLAYLIST_EXPORT_PATH/${playlist.name}.xml"
+
         val doc: Document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument()
         val djPlaylists: Element = doc.createElement("DJ_PLAYLISTS")
         djPlaylists.setAttribute("Version", "1.0.0")
@@ -181,140 +184,9 @@ object PlaylistExporter {
         // Implement a mapping based on tools like MIXO's Key Converter
         return key // Placeholder
     }
-}
 
-private val dateFormat = SimpleDateFormat("yyyy/M/d")
-private val timeFormat = SimpleDateFormat("HHmm")
-
-fun exportPlaylist(playlist: YmePlaylist, outputPath: String) {
-    val file = File(outputPath)
-    val xml = generateNMLXml(playlist)
-    file.writeText(xml, Charsets.UTF_8)
-}
-
-private fun generateNMLXml(playlist: YmePlaylist): String {
-    val validTracks = playlist.tracks.filter { it.isNotNew }
-    val currentDate = Date()
-    val dollarChar = '$'
-
-    return buildString {
-        appendLine("""<?xml version="1.0" encoding="UTF-8" standalone="no" ?>""")
-        appendLine("""<NML VERSION="19">""")
-        appendLine("""<HEAD COMPANY="www.native-instruments.com" PROGRAM="Traktor"></HEAD>""")
-        appendLine("""<COLLECTION ENTRIES="${validTracks.size}">""")
-
-        // Generate collection entries
-        validTracks.forEach { track ->
-            appendLine(generateTrackEntry(track, currentDate))
-        }
-
-        appendLine("""</COLLECTION>""")
-        appendLine("""<SETS ENTRIES="0"></SETS>""")
-        appendLine("""<PLAYLISTS>""")
-        appendLine("""<NODE TYPE="FOLDER" NAME="${dollarChar}ROOT">""")
-        appendLine("""<SUBNODES COUNT="1">""")
-        appendLine("""<NODE TYPE="PLAYLIST" NAME="${escapeXml(playlist.name)}">""")
-        appendLine("""<PLAYLIST ENTRIES="${validTracks.size}" TYPE="LIST" UUID="${generateUUID()}">""")
-
-        // Generate playlist entries
-        validTracks.forEach { track ->
-            appendLine(generatePlaylistEntry(track))
-        }
-
-        appendLine("""</PLAYLIST>""")
-        appendLine("""</NODE>""")
-        appendLine("""</SUBNODES>""")
-        appendLine("""</NODE>""")
-        appendLine("""</PLAYLISTS>""")
-        appendLine("""<INDEXING></INDEXING>""")
-        appendLine("""</NML>""")
+    private fun buildExportFile(exportDir: String, name: String, extension: String): String {
+        val filename = "$name.$extension"
+        return Path.of(exportDir).resolve(filename).toString()
     }
-}
-
-private fun generateTrackEntry(track: YmeTrack, currentDate: Date): String {
-    val file = File(track.filePath)
-    val directory = file.parent?.replace("/", "/:") ?: ""
-    val fileName = file.name
-    val volume = getVolumeName(track.filePath)
-
-    return buildString {
-        appendLine("""
-                 <ENTRY MODIFIED_DATE="${dateFormat.format(currentDate)}" 
-                        MODIFIED_TIME="${timeFormat.format(currentDate)}
-                        AUDIO_ID="${generateAudioId()}
-                        TITLE="${escapeXml(track.title)}" 
-                        ARTIST="${escapeXml(track.artist)}">
-                 """.trimIndent())
-        appendLine("""
-                 <LOCATION DIR="$directory" 
-                        FILE="$fileName" 
-                        VOLUME="$volume
-                        VOLUMEID="$volume"></LOCATION>
-                 """.trimIndent())
-        appendLine("""<ALBUM OF_TRACKS="1" TRACK="1" TITLE=""></ALBUM>""")
-        appendLine("""<MODIFICATION_INFO AUTHOR_TYPE="user"></MODIFICATION_INFO>""")
-        appendLine("""
-                 <INFO 
-                    BITRATE="320000" 
-                    GENRE="" 
-                    LABEL="" 
-                    COMMENT=""
-                    COVERARTID="" 
-                    KEY=""
-                    PLAYCOUNT="0" 
-                    PLAYTIME="${track.duration}
-                    PLAYTIME_FLOAT="${track.duration}.0" 
-                    RANKING="0" 
-                    IMPORT_DATE="${dateFormat.format(currentDate)}" 
-                    LAST_PLAYED=""
-                    RELEASE_DATE="" 
-                    FLAGS="0" 
-                    COLOR="0"></INFO>
-                 """.trimIndent())
-        appendLine("""<TEMPO BPM="120.000000" BPM_QUALITY="100.000000"></TEMPO>""")
-        appendLine("""<LOUDNESS PEAK_DB="-0.000000" PERCEIVED_DB="0.000000" ANALYZED_DB="0.000000"></LOUDNESS>""")
-        appendLine("""<MUSICAL_KEY VALUE="0"></MUSICAL_KEY>""")
-        appendLine("""</ENTRY>""")
-    }
-}
-
-private fun generatePlaylistEntry(track: YmeTrack): String {
-    val file = File(track.filePath)
-    val volume = getVolumeName(track.filePath)
-    val fullPath = "$volume${track.filePath}"
-
-    return buildString {
-        appendLine("""<ENTRY>""")
-        appendLine("""<PRIMARYKEY TYPE="TRACK KEY="$fullPath"></PRIMARYKEY>""")
-        appendLine("""</ENTRY>""")
-    }
-}
-
-private fun generateUUID(): String {
-    return UUID.randomUUID().toString().replace("-", "")
-}
-
-private fun generateAudioId(): String {
-    // Generate a placeholder audio ID - in real Traktor this is a hash of the audio content
-    val random = Random()
-    val bytes = ByteArray(128)
-    random.nextBytes(bytes)
-    return Base64.getEncoder().encodeToString(bytes).replace(Regex("[+/=]"), "")
-}
-
-private fun getVolumeName(filePath: String): String {
-    return when {
-        filePath.startsWith("/Users/") -> "Macintosh HD"
-        filePath.startsWith("C:\\") -> "C:"
-        else -> "Unknown Volume"
-    }
-}
-
-private fun escapeXml(text: String): String {
-    return text
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace("\"", "&quot;")
-        .replace("'", "&apos;")
 }
