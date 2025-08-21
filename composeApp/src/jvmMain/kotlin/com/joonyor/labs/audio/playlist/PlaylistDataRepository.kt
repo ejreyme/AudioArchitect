@@ -36,15 +36,6 @@ class PlaylistDataRepository {
         }
     }
 
-    fun updatePlaylist(playlist: YmePlaylist, track: YmeTrack) {
-        val updatedPlaylist = YmePlaylist(
-            id = playlist.id,
-            name = playlist.name,
-            tracks = listOf(playlist.tracks, listOf(track)).flatten()
-        )
-        updatePlaylist(updatedPlaylist)
-    }
-
     // DELETE
     fun deletePlaylist(playlist: YmePlaylist) {
         dataSource.value = dataSource.value.toMutableList().apply {

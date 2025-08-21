@@ -27,29 +27,31 @@ class TrackDataRepository {
     }
 
     // UPDATE
-    fun updateTrack(track: YmeTrack, tag: YmeTag) {
-        readTrack(track.filePath)?.let {
-
-            val updatedTags = it.tags.toMutableSet()
-            if (tag.active) {
-                updatedTags.add(tag)
-            } else {
-                updatedTags.remove(tag)
-            }
-
-            val updatedTrack = YmeTrack(
-                filePath = it.filePath,
-                title = it.title,
-                artist = it.artist,
-                tags = updatedTags.toSet(),
-                duration = it.duration,
+    fun updateTrackTags(track: YmeTrack, tag: YmeTag) {
+        readTrack(track.filePath)?.let { existingTrack ->
+            val updatedTrack = existingTrack.copy(
+                tags = updateTagsForTrack(existingTrack.tags, tag)
             )
-
-            dataSource.value = dataSource.value.toMutableList().apply {
-                set(indexOf(it), updatedTrack)
-            }
+            replaceTrackInDataSource(existingTrack, updatedTrack)
         }
     }
+
+    private fun updateTagsForTrack(currentTags: Set<YmeTag>, tag: YmeTag): Set<YmeTag> {
+        return currentTags.toMutableSet().apply {
+            if (tag.active) {
+                add(tag)
+            } else {
+                remove(tag)
+            }
+        }.toSet()
+    }
+
+    private fun replaceTrackInDataSource(oldTrack: YmeTrack, newTrack: YmeTrack) {
+        dataSource.value = dataSource.value.toMutableList().apply {
+            set(indexOf(oldTrack), newTrack)
+        }
+    }
+
 
     // DELETE
     fun deleteTrack(track: YmeTrack) {

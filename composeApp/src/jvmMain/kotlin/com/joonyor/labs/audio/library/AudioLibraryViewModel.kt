@@ -74,7 +74,7 @@ class AudioLibraryViewModel() {
 
     private fun onTrackAddTagEvent(event: TrackEvent) {
         logger.debug("Add tag to track: ${event.track.title}")
-        audioLibraryService.updateTrack(event.track, event.tag)
+        audioLibraryService.updateTrackTags(event.track, event.tag)
     }
 
     fun onSearchQuery(query: String) {
@@ -122,7 +122,7 @@ class AudioLibraryViewModel() {
 
     private fun onPlaylistAddTrackEvent(event: PlaylistEvent) {
         logger.debug("Add track to playlist: ${event.playlist.name}")
-        audioLibraryService.updatePlaylist(event.playlist, event.track)
+        audioLibraryService.addTrackToPlaylist(event.playlist, event.track)
     }
 
     private fun onPlaylistReadEvent(event: PlaylistEvent) {

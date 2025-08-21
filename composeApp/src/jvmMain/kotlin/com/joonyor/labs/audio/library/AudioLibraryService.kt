@@ -54,9 +54,9 @@ class AudioLibraryService {
         triggerTrackCollectionUpdate()
     }
 
-    fun updateTrack(track: YmeTrack, tag: YmeTag) {
+    fun updateTrackTags(track: YmeTrack, tag: YmeTag) {
         logger.debug("updateTrack")
-        trackDataRepository.updateTrack(track, tag)
+        trackDataRepository.updateTrackTags(track, tag)
         triggerTrackCollectionUpdate()
     }
 
@@ -66,9 +66,12 @@ class AudioLibraryService {
         triggerPlaylistCollectionUpdate()
     }
 
-    fun updatePlaylist(playlist: YmePlaylist, track: YmeTrack) {
+    fun addTrackToPlaylist(playlist: YmePlaylist, track: YmeTrack) {
         logger.debug("updatePlaylist")
-        playlistDataRepository.updatePlaylist(playlist, track)
+        val updatedPlaylist = playlist.copy(
+            tracks = playlist.tracks.toMutableList().apply { add(track) }
+        )
+        playlistDataRepository.updatePlaylist(updatedPlaylist)
         triggerPlaylistCollectionUpdate()
     }
 
