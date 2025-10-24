@@ -41,7 +41,14 @@ Visit our [web version](https://your-domain.com/audioarchitect) - no installatio
 
 ### Project Structure
 
-AudioArchitect/ ├── composeApp/ # Main Compose Multiplatform application │ ├── src/commonMain/ # Shared UI and business logic │ ├── src/jvmMain/ # Desktop-specific code │ └── src/wasmJsMain/ # Web-specific code ├── shared/ # Shared Kotlin multiplatform code ├── server/ # Backend server (Ktor) └── gradle/ # Gradle wrapper and configuration
+AudioArchitect/
+- **composeApp/**: Main Compose Multiplatform application
+    - **src/commonMain/**: Shared UI and business logic
+    - **src/jvmMain/**: Desktop-specific code
+    - **src/wasmJsMain/**: Web-specific code
+- **shared/**: Shared Kotlin multiplatform code
+- **server/**: Backend server (Ktor)
+- **gradle/**: Gradle wrapper and configuration
 
 ### Tech Stack
 

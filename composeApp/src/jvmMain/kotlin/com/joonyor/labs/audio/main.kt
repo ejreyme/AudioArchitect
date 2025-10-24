@@ -7,7 +7,6 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.joonyor.labs.audio.config.AppConfiguration.APP_NAME
 import com.joonyor.labs.audio.library.AudioLibraryScreen
-import com.joonyor.labs.audio.library.AudioLibraryService
 import com.joonyor.labs.audio.library.AudioLibraryViewModel
 import com.joonyor.labs.audio.player.AudioPlayerViewModel
 import com.joonyor.labs.audio.player.VlcAudioPlayerService
@@ -22,7 +21,7 @@ fun main() = application {
     Window(
         onCloseRequest = { onExit(this, audioPlayerService) },
         title = APP_NAME,
-        state = rememberWindowState(width = 1440.dp, height = 1080.dp)
+        state = rememberWindowState(width = 1440.dp, height = 1080.dp),
     ) {
         AudioLibraryScreen(
             libVM = AudioLibraryViewModel(),

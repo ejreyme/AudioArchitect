@@ -51,13 +51,13 @@ class AudioLibraryService {
     init {
         trackDataRepository.dataSource.value = loadTracksFromPath()
         triggerPlaylistCollectionUpdate()
-        triggerTrackCollectionUpdate()
+        trackCollectionSubscribers()
     }
 
     fun updateTrackTags(track: YmeTrack, tag: YmeTag) {
         logger.debug("updateTrack")
         trackDataRepository.updateTrackTags(track, tag)
-        triggerTrackCollectionUpdate()
+        trackCollectionSubscribers()
     }
 
     fun createPlaylist(playlist: YmePlaylist) {
@@ -83,11 +83,7 @@ class AudioLibraryService {
     fun exportPlaylist(playlist: YmePlaylist, type: PlaylistExportType) {
         scope.launch {
             logger.debug("exportPlaylist: {}", playlist.name)
-            when (type) {
-                PlaylistExportType.M3U -> playlistExporter.asM3u(playlist)
-                PlaylistExportType.TRAKTOR -> playlistExporter.asNML(playlist)
-                PlaylistExportType.REKORDBOX -> playlistExporter.asXML(playlist)
-            }
+            playlistExporter.asM3u(playlist)
         }
     }
 
@@ -106,7 +102,7 @@ class AudioLibraryService {
     }
 
     // Emit updated list to trigger UI recomposition
-    private fun triggerTrackCollectionUpdate() {
+    private fun trackCollectionSubscribers() {
         scope.launch {
             trackDataRepository.latestTrackCollection.collect {
                 logger.debug("triggerTrackCollectionUpdate: size=${it.size}")

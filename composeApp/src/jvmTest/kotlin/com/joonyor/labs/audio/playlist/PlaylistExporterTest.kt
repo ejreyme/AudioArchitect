@@ -1,7 +1,7 @@
 package com.joonyor.labs.audio.playlist
 
 import com.joonyor.labs.audio.track.YmeTrack
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
