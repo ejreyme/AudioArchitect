@@ -33,7 +33,7 @@ kotlin {
     }
     
     sourceSets {
-        val exposedVersion="0.38.1"
+        val exposedVersion="1.0.0-rc-2"
 
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -58,6 +58,7 @@ kotlin {
             implementation("org.jetbrains.exposed:exposed-dao:${exposedVersion}")
             implementation("org.jetbrains.exposed:exposed-jdbc:${exposedVersion}")
             implementation("uk.co.caprica:vlcj:4.11.0")
+            implementation("com.h2database:h2:2.3.232")
             implementation("net.jthink:jaudiotagger:3.0.1")
             implementation("com.github.bjoernpetersen:m3u-parser:1.4.0")
             implementation("com.iheartradio.m3u8:open-m3u8:0.2.4")
@@ -74,11 +75,11 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "com.joonyor.labs.audioarchitect.MainKt"
+        mainClass = "com.sealedstack.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.joonyor.labs.audioarchitect"
+            packageName = "com.sealedstack"
             packageVersion = "1.0.0"
         }
     }

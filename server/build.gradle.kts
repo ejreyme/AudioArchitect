@@ -4,10 +4,10 @@ plugins {
     application
 }
 
-group = "com.joonyor.labs.audioarchitect"
+group = "com.sealedstack.audioarchitect"
 version = "1.0.0"
 application {
-    mainClass.set("com.joonyor.labs.audioarchitect.ApplicationKt")
+    mainClass.set("com.sealedstack.audioarchitect.ApplicationKt")
     
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
