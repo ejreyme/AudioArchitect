@@ -55,6 +55,7 @@ data class YmeTrack(
 ) {
     val isNew = filePath.isEmpty()
     val isNotNew = !isNew
+
     fun durationDisplay(): String {
         if (duration == 0) {
             return UNKNOWN_DURATION
@@ -62,6 +63,14 @@ data class YmeTrack(
         val minutes = duration / 60
         val seconds = duration % 60
         return String.format("%02d:%02d", minutes, seconds)
+    }
+
+    fun removeTag(tag: YmeTag): YmeTrack {
+        return this.copy(tags = this.tags.filter { it.name != tag.name }.toSet())
+    }
+
+    fun addTag(newTag: YmeTag): YmeTrack {
+       return this.copy(tags = this.tags.toMutableSet().apply { add(newTag) })
     }
 }
 

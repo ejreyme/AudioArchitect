@@ -21,7 +21,7 @@ class PlaylistExporterTest {
         val playlistName = "test"
         val extension = "m3u"
         val ymeTracks = listOf(YmeTrack(), YmeTrack())
-        val ymePlaylist = YmePlaylist(name = playlistName, ymeTracks = ymeTracks)
+        val ymePlaylist = YmePlaylist(name = playlistName, tracks = ymeTracks)
         // act
         val result = PlaylistExporter.asM3u(ymePlaylist)
         // assert

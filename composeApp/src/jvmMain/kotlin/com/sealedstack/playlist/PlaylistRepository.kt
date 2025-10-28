@@ -12,24 +12,24 @@ import kotlinx.coroutines.launch
  * It leverages a reactive data source to expose and manipulate playlist collections.
  */
 class PlaylistRepository(private val localDatabase: LocalDatabase): Repository<YmePlaylist> {
-    val latestRepoPlaylists: Flow<List<YmePlaylist>> = localDatabase.latestDatabasePlaylists
-
     private val scope = CoroutineScope(Dispatchers.IO)
+
+    val latestRepoPlaylists: Flow<List<YmePlaylist>> = localDatabase.latestDatabasePlaylists
 
     init {
         scope.launch {
             latestRepoPlaylists.collect {
-                print("watching...$it")
+                it.forEach { (id, name, tracks) -> println("$id,$name,tracks:${tracks.size}") }
             }
         }
     }
 
     override suspend fun create(item: YmePlaylist) {
-        localDatabase.create(item)
+        localDatabase.insertPlaylist(item)
     }
 
     override suspend fun read(item: YmePlaylist): YmePlaylist {
-        return localDatabase.read(item)
+        return localDatabase.selectPlaylist(item)
     }
 
     override suspend fun update(item: YmePlaylist) {
@@ -37,17 +37,6 @@ class PlaylistRepository(private val localDatabase: LocalDatabase): Repository<Y
     }
 
     override suspend fun delete(item: YmePlaylist) {
-        localDatabase.delete(item)
-    }
-
-    private fun generatePlaylistList(): List<YmePlaylist> {
-        return listOf(
-            YmePlaylist(1, "Playlist 1"),
-            YmePlaylist(2, "Playlist 2"),
-            YmePlaylist(3, "Playlist 3"),
-            YmePlaylist(4, "Playlist 4"),
-            YmePlaylist(5, "Playlist 5"),
-            YmePlaylist(6, "Playlist 6"),
-        )
+        localDatabase.deletePlaylist(item)
     }
 }

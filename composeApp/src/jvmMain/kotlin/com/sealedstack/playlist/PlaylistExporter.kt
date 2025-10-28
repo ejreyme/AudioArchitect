@@ -15,7 +15,7 @@ import java.nio.file.Path
 object PlaylistExporter {
     fun asM3u(ymePlaylist: YmePlaylist): String {
         return try {
-            val trackDataList = buildTrackDataList(ymePlaylist.ymeTracks)
+            val trackDataList = buildTrackDataList(ymePlaylist.tracks)
             val playlistExport = buildM3uPlaylist(trackDataList)
             writePlaylistToFile(playlistExport, ymePlaylist.name, "m3u")
         } catch (e: Exception) {

@@ -45,7 +45,7 @@ class AudioPlayerViewModel(private val audioPlayerService: AudioPlayerService) {
             AudioPlayerEventType.STOP -> onStopClick()
             AudioPlayerEventType.RESUME -> onResumeClick(event)
             AudioPlayerEventType.VOLUME -> onVolumeChange(event.volume)
-            AudioPlayerEventType.TRACK_POSITION -> onTrackPositionChange(event.trackPosition)
+            AudioPlayerEventType.POSITION -> onTrackPositionChange(event.trackPosition)
             AudioPlayerEventType.REPEAT -> onRepeatClick(event.isRepeat)
             AudioPlayerEventType.QUEUE -> onQueueEvent(event.track)
             else -> println("Unknown audio player event")
@@ -196,7 +196,7 @@ enum class AudioPlayerEventType {
     STOP,
     PAUSE,
     RESUME,
-    TRACK_POSITION,
+    POSITION,
     QUEUE,
     VOLUME,
     REPEAT,

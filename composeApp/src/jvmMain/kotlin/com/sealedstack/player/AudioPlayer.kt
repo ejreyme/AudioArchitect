@@ -28,7 +28,7 @@ fun AudioPlayer(
                     playerState.trackPosition.value = it
                     onAudioPlayerEvent.invoke(
                         AudioPlayerEvent(
-                            type = AudioPlayerEventType.TRACK_POSITION,
+                            type = AudioPlayerEventType.POSITION,
                             trackPosition = it
                         )
                     )

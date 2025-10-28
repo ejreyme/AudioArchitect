@@ -2,14 +2,19 @@ package com.sealedstack.library
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.sealedstack.library.NavEventType.*
 import com.sealedstack.playlist.PlaylistEvent
-import com.sealedstack.playlist.PlaylistEventType
+import com.sealedstack.playlist.PlaylistEventType.*
 import com.sealedstack.playlist.YmePlaylist
 import com.sealedstack.track.TrackEvent
-import com.sealedstack.track.TrackEventType
+import com.sealedstack.track.TrackEventType.ADD_TAG
 import com.sealedstack.track.YmeTrack
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class NavEvent(
@@ -24,15 +29,20 @@ enum class NavEventType {
 }
 
 data class AudioLibraryState(
-    var activeYmePlaylist: MutableState<YmePlaylist> = mutableStateOf(YmePlaylist(id = 0, name = "Library")),
-    var tracks: MutableState<List<YmeTrack>> = mutableStateOf(emptyList()),
-    var playlists: MutableState<List<YmePlaylist>> = mutableStateOf(emptyList()),
-    var activeScreen: MutableState<NavEventType> = mutableStateOf(NavEventType.LIBRARY)
+    var activePlaylist: MutableState<YmePlaylist> = mutableStateOf(YmePlaylist(id = 0, name = "Library")),
+    var trackCollection: MutableState<List<YmeTrack>> = mutableStateOf(emptyList()),
+    var playlistCollection: MutableState<List<YmePlaylist>> = mutableStateOf(emptyList()),
+    var activeScreen: MutableState<NavEventType> = mutableStateOf(LIBRARY),
 )
 
-class AudioLibraryViewModel(val audioLibraryService: AudioLibraryService) {
+class AudioLibraryViewModel(
+    val audioLibraryService: AudioLibraryService
+) {
     val scope = CoroutineScope(Dispatchers.IO)
     val libState = AudioLibraryState()
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
 
     init {
         refreshLibrary()
@@ -40,37 +50,52 @@ class AudioLibraryViewModel(val audioLibraryService: AudioLibraryService) {
 
     fun onSearchQuery(query: String) {
         scope.launch {
-            if (query.isEmpty()) {
-                when (libState.activeScreen.value) {
-                    NavEventType.LIBRARY -> refreshTracks()
-                    NavEventType.PLAYLIST -> {
-                        libState.tracks.value = libState.activeYmePlaylist.value.ymeTracks
+            _searchQuery.value = query
+            when(libState.activeScreen.value) {
+                HOME -> refreshTracks()
+                EXPLORE -> refreshTracks()
+                LIBRARY -> {
+                    when(searchQuery.value.isEmpty()) {
+                        true -> refreshLibrary()
+                        false -> filterTracks()
                     }
-                    else -> refreshTracks()
                 }
-            } else {
-                libState.tracks.value = audioLibraryService.searchTracks(query)
+                PLAYLIST -> {
+                    when(searchQuery.value.isEmpty()) {
+                        true -> libState.trackCollection.value = libState.activePlaylist.value.tracks
+                        false -> refreshTracks()
+                    }
+                }
             }
         }
     }
-    
+
     fun onNavigationEvent(event: NavEvent) {
         when (event.type) {
-            NavEventType.EXPLORE -> onNavExploreEvent()
-            NavEventType.LIBRARY -> onNavLibraryEvent()
-            NavEventType.HOME -> onNavHomeEvent()
-            NavEventType.PLAYLIST -> onNavPlaylistEvent()
+            EXPLORE -> libState.activeScreen.value = EXPLORE
+            LIBRARY -> {
+                libState.activeScreen.value = LIBRARY
+                scope.launch { refreshTracks() }
+            }
+            HOME -> {
+                libState.activeScreen.value = HOME
+            }
+            PLAYLIST ->  libState.activeScreen.value = PLAYLIST
         }
     }
 
     fun onPlaylistEvent(event: PlaylistEvent) {
         scope.launch {
             when (event.type) {
-                PlaylistEventType.CREATE -> onPlaylistCreateEvent(event)
-                PlaylistEventType.READ -> onPlaylistReadEvent(event)
-                PlaylistEventType.ADD_TRACK -> onPlaylistAddTrackEvent(event)
-                PlaylistEventType.DELETE -> onPlaylistDeleteEvent(event)
-                PlaylistEventType.EXPORT -> onPlaylistExportEvent(event)
+                CREATE -> audioLibraryService.newPlaylist(event.playlist)
+                READ -> {
+                    libState.activeScreen.value = PLAYLIST
+                    libState.trackCollection.value = event.playlist.tracks
+                    libState.activePlaylist.value = event.playlist
+                }
+                ADD_TRACK -> audioLibraryService.updatePlaylist(event.playlist, event.track)
+                DELETE -> audioLibraryService.deletePlaylist(event.playlist)
+                EXPORT -> audioLibraryService.exportPlaylist(event.playlist)
                 else -> println("Unknown playlist event")
             }
         }
@@ -79,58 +104,28 @@ class AudioLibraryViewModel(val audioLibraryService: AudioLibraryService) {
     fun onTrackEvent(event: TrackEvent) {
         scope.launch {
             when (event.type) {
-                TrackEventType.ADD_TAG -> onTrackAddTagEvent(event)
+                ADD_TAG -> audioLibraryService.updateTrack(event.ymeTrack, event.tag)
                 else -> println("Unknown track event")
             }
         }
     }
 
-    private suspend fun onTrackAddTagEvent(event: TrackEvent) {
-        println("Add tag to track: ${event.ymeTrack.title}")
-        audioLibraryService.updateTrack(event.ymeTrack, event.tag)
-    }
-
-    private fun onPlaylistExportEvent(event: PlaylistEvent) {
-        println("Export playlist: ${event.playlist.name}")
-        audioLibraryService.exportPlaylist(event.playlist, event.exportType)
-    }
-
-    private suspend fun onPlaylistDeleteEvent(event: PlaylistEvent) {
-        audioLibraryService.deletePlaylist(event.playlist)
-    }
-    
-    private fun onNavLibraryEvent() {
-        libState.activeScreen.value = NavEventType.LIBRARY
-        scope.launch { refreshTracks() }
-    }
-
-    private fun onNavPlaylistEvent() {
-        libState.activeScreen.value = NavEventType.PLAYLIST
-    }
-
-    private fun onNavExploreEvent() {
-        libState.activeScreen.value = NavEventType.EXPLORE
-    }
-
-    private fun onNavHomeEvent() {
-        libState.activeScreen.value = NavEventType.HOME
-    }
-    
-    private suspend fun onPlaylistCreateEvent(event: PlaylistEvent) {
-        println("Create playlist: ${event.playlist.name}")
-        audioLibraryService.createPlaylist(event.playlist)
-    }
-
-    private suspend fun onPlaylistAddTrackEvent(event: PlaylistEvent) {
-        println("Add track to playlist: ${event.playlist.name}")
-        audioLibraryService.addTrackToPlaylist(event.playlist, event.track)
-    }
-
-    private fun onPlaylistReadEvent(event: PlaylistEvent) {
-        println("View playlist: ${event.playlist.name}")
-        libState.activeScreen.value = NavEventType.PLAYLIST
-        libState.tracks.value = event.playlist.ymeTracks
-        libState.activeYmePlaylist.value = event.playlist
+    private suspend fun filterTracks() {
+        combine(
+            audioLibraryService.latestLibraryTracks,
+            searchQuery
+        ) { items, query ->
+            if (query.isBlank()) {
+                items
+            } else {
+                items.filter { item ->
+                    item.artist.contains(query, ignoreCase = true) ||
+                            item.title.contains(query, ignoreCase = true)
+                }
+            }
+        }.collect {
+            libState.trackCollection.value = it
+        }
     }
     
     private fun refreshLibrary() {
@@ -139,17 +134,14 @@ class AudioLibraryViewModel(val audioLibraryService: AudioLibraryService) {
     }
 
     private suspend fun refreshPlaylists() {
-        println("refreshPlaylists")
         audioLibraryService.latestLibraryPlaylists.collect {
-            println("refreshPlaylists: ${it.size}")
-            libState.playlists.value = it
+            libState.playlistCollection.value = it
         }
     }
 
     private suspend fun refreshTracks() {
         audioLibraryService.latestLibraryTracks.collect {
-            println("refreshTracks: ${it.size}")
-            libState.tracks.value = it
+            libState.trackCollection.value = it
         }
     }
 }

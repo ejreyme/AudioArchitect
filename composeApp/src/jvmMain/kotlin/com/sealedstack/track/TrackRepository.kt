@@ -9,16 +9,14 @@ import kotlinx.coroutines.launch
  * creating, reading, updating, deleting, and searching for tracks.
  */
 class TrackRepository(val localDatabase: com.sealedstack.data.LocalDatabase): com.sealedstack.data.Repository<YmeTrack> {
+    private val scope = CoroutineScope(Dispatchers.IO)
+
     val latestRepoTracks = localDatabase.latestDatabaseTracks
-    val scope = CoroutineScope(Dispatchers.IO)
 
     init {
         scope.launch {
             latestRepoTracks.collect { tracks ->
-                tracks.forEach {
-                    println(it)
-                }
-                println("watching from TrackRepository")
+                tracks.forEach { println(it) }
             }
         }
     }

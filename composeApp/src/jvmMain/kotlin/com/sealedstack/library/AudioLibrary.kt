@@ -77,7 +77,7 @@ fun AudioLibrary(
                     SideNav(onNavEvent = { libVM.onNavigationEvent(it) })
                     Divider()
                     PlaylistCollection(
-                        playlists = libVM.libState.playlists.value,
+                        playlists = libVM.libState.playlistCollection.value,
                         onPlaylistEvent = { libVM.onPlaylistEvent(it) }
                     )
                 }
@@ -99,9 +99,9 @@ fun AudioLibrary(
                                     selectedTrack = apVM.playerState.activeTrack,
                                     isPlaying = apVM.playerState.isPlaying.value,
                                     trackPlaying = apVM.playerState.trackPlaying.value,
-                                    tracks = libVM.libState.tracks.value,
-                                    playlistCollection = libVM.libState.playlists.value,
-                                    activePlaylist = libVM.libState.activeYmePlaylist.value,
+                                    tracks = libVM.libState.trackCollection.value,
+                                    playlistCollection = libVM.libState.playlistCollection.value,
+                                    activePlaylist = libVM.libState.activePlaylist.value,
                                     onPlaylistEvent = { libVM.onPlaylistEvent(it) },
                                     onAudioPlayerEvent = { apVM.onAudioPlayerEvent(it) },
                                     mediaPlayerState = apVM.playerState.mediaState.value

@@ -1,7 +1,6 @@
 package com.sealedstack.library
 
 import com.sealedstack.config.AppConfiguration
-import com.sealedstack.playlist.PlaylistExportType
 import com.sealedstack.playlist.PlaylistExporter
 import com.sealedstack.playlist.PlaylistRepository
 import com.sealedstack.playlist.YmePlaylist
@@ -39,56 +38,34 @@ class AudioLibraryService(
     val trackRepository: TrackRepository,
     val playlistRepository: PlaylistRepository
 ) {
+    private val scope = CoroutineScope(Dispatchers.IO)
+
     val latestLibraryPlaylists: Flow<List<YmePlaylist>> = playlistRepository.latestRepoPlaylists
     val latestLibraryTracks: Flow<List<YmeTrack>> = trackRepository.latestRepoTracks
 
-    private val scope = CoroutineScope(Dispatchers.IO)
+    init { loadTracksFromPath() }
 
-    init {
-        loadTracksFromPath()
-    }
-
-    suspend fun updateTrack(ymeTrack: YmeTrack, tag: YmeTag?) {
-        println("updateTrack")
-
+    suspend fun updateTrack(track: YmeTrack, tag: YmeTag?) {
         when(tag == null) {
-            true -> trackRepository.update(item = ymeTrack)
-            false -> {
-                val tags = mutableSetOf<YmeTag>()
-                tags.addAll(ymeTrack.tags)
-                tags.add(tag)
-                val updatedTrack = ymeTrack.copy(tags = tags )
-                trackRepository.update(updatedTrack)
-            }
+            true -> trackRepository.update(track)
+            false -> trackRepository.update(track.addTag(tag))
         }
     }
 
-    suspend fun createPlaylist(ymePlaylist: YmePlaylist) {
-        println("addPlaylist")
-        playlistRepository.create(ymePlaylist)
+    suspend fun newPlaylist(playlist: YmePlaylist) {
+        playlistRepository.create(playlist)
     }
 
-    suspend fun addTrackToPlaylist(ymePlaylist: YmePlaylist, ymeTrack: YmeTrack) {
-        println("updatePlaylist")
-        val updatedPlaylist = ymePlaylist.copy(
-            ymeTracks = ymePlaylist.ymeTracks.toMutableList().apply { add(ymeTrack) }
-        )
-        playlistRepository.update(updatedPlaylist)
+    suspend fun updatePlaylist(playlist: YmePlaylist, track: YmeTrack) {
+        playlistRepository.update(playlist.addTrack(track))
     }
 
-    suspend fun deletePlaylist(ymePlaylist: YmePlaylist) {
-        println("deletePlaylist")
-        playlistRepository.delete(ymePlaylist)
+    suspend fun deletePlaylist(playlist: YmePlaylist) {
+        playlistRepository.delete(playlist)
     }
 
-    fun exportPlaylist(ymePlaylist: YmePlaylist, type: PlaylistExportType) {
-        scope.launch {
-            PlaylistExporter.asM3u(ymePlaylist)
-        }
-    }
-
-    fun searchTracks(query: String): List<YmeTrack> {
-        return emptyList()
+    fun exportPlaylist(playlist: YmePlaylist) {
+        PlaylistExporter.asM3u(playlist)
     }
 
     private fun loadTracksFromPath(pathname: String = AppConfiguration.LIBRARY_ROOT_PATH) {

@@ -110,7 +110,7 @@ private fun createPlaylistMenuItems(
     onPlaylistEvent: (PlaylistEvent) -> Unit
 ): List<ContextMenuItem> {
     return playListCollection
-        .filter { playlist -> !playlist.ymeTracks.contains(track) }
+        .filter { playlist -> !playlist.tracks.contains(track) }
         .map { playlist ->
             ContextMenuItem(
                 label = "${playlist.name} +",
